@@ -105,4 +105,11 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /switch to dark theme/i }));
     expect(document.documentElement.dataset.theme).toBe('dark');
   });
+
+  it('keeps every nav and theme button labelled for assistive tech', () => {
+    render(<App />);
+    for (const button of screen.getAllByRole('button')) {
+      expect(button).toHaveAccessibleName();
+    }
+  });
 });

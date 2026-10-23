@@ -1079,8 +1079,14 @@ fieldset {
   .pipeline {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* Icon-only on phones, but the label stays available to screen readers. */
   .sidebar .nav-text {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
   .page-header h1 {
     font-size: 1.35rem;
