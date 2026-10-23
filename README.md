@@ -54,7 +54,7 @@ flowchart LR
     F --> H[handler.ts<br/>method / content-type / size / Zod / rate limit]
     H -- demo mode --> D[Deterministic pipeline<br/>no model call]
     H -- agent mode --> A[Agent loop<br/>max 6 turns, 45 s timeout]
-    A <-- function calling --> G[(Google Gemini API<br/>gemini-3.5-flash)]
+    A <-- function calling --> G[(Google Gemini API<br/>gemini-3.1-flash-lite<br/>fallback gemini-3.5-flash)]
     A --> T[Tools<br/>calculate_footprint<br/>compare_to_benchmarks<br/>rank_actions<br/>submit_plan]
     D --> T
     T --> P[assemblePlan<br/>numbers from tools only]
@@ -84,8 +84,8 @@ flowchart LR
 - **Function calling** in `ANY` mode with four declared tools and JSON-Schema parameters (`parametersJsonSchema`).
 - **System instructions** that set a tool order, data hygiene ("never guess missing categories") and an injection boundary.
 - **Multi-turn agent loop** that returns tool results as `functionResponse` parts and preserves model content (including thought signatures) between turns.
-- **`gemini-3.5-flash`**, pinned after benchmarking the full agent on models available to our key: about 15 s for a 4-turn plan with the most specific reasoning. The moving `gemini-flash-latest` alias hung on tool calls and retired 2.5 models returned 404. `GEMINI_MODEL=gemini-3.1-flash-lite` gives about 6 s with plainer plans.
-- **Resilience:** one automatic retry on 429/5xx, a 45 s abort budget, and server-side logging of upstream failures.
+- **Benchmarked model choice:** `gemini-3.1-flash-lite` by default (a full 4-turn plan in about 6 s, with generous free-tier quota) and **automatic fallback** to `gemini-3.5-flash` if a call fails (quota, overload or a retired model). The plan records which model answered. We measured that the moving `gemini-flash-latest` alias hung on tool calls and that 2.5 models return 404 for new keys. Both models can be set with `GEMINI_MODEL` and `GEMINI_FALLBACK_MODEL`.
+- **Resilience:** a 45 s abort budget enforced on every call, and server-side logging of upstream failures (status and message only).
 - Server-side SDK timeout (`httpOptions.timeout`) plus an `AbortSignal` budget per request.
 - **Firebase Performance Monitoring** for real-user page-load and `/api/plan` network traces ([`src/telemetry.ts`](src/telemetry.ts)).
 - **Firebase Analytics (GA4)** custom events `plan_generated` (source, latency, tool calls, actions, rating) and `plan_failed` (status). No user text is ever sent.

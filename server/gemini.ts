@@ -2,30 +2,30 @@ import { GoogleGenAI } from '@google/genai';
 import type { ModelClient } from './agent.js';
 
 /**
- * Pinned stable model, chosen by benchmarking the full 4-turn agent: about 15 s end to end with the most
- * specific plans. The moving `gemini-flash-latest` alias hung on tool calls. Override with GEMINI_MODEL
- * (for example `gemini-3.1-flash-lite`, which is about 6 s with plainer plans).
+ * Models chosen by benchmarking the full 4-turn agent on the Gemini API:
+ * - gemini-3.1-flash-lite: about 6 s end to end, generous free-tier quota. Default.
+ * - gemini-3.5-flash: richer plans (about 15 s) but a small free-tier quota. Used as the fallback
+ *   when the primary model fails, so one provider hiccup does not fail the request.
+ * The moving `gemini-flash-latest` alias hung on tool calls, and 2.5 models return 404 for new keys.
  */
-export const DEFAULT_MODEL = 'gemini-3.5-flash';
+export const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
+export const DEFAULT_FALLBACK_MODEL = 'gemini-3.5-flash';
 
 export interface GeminiConfig {
   client: ModelClient | null;
   model: string;
+  fallbackModel: string;
 }
 
 /** Reads configuration from the server environment only. The key never reaches the browser bundle. */
 export function createGeminiFromEnv(env: Record<string, string | undefined> = process.env): GeminiConfig {
   const apiKey = env.GEMINI_API_KEY?.trim();
   const model = env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
-  if (!apiKey) return { client: null, model };
-  // No httpOptions.timeout: the SDK maps it to an X-Server-Timeout header, which made Gemini abandon
-  // slower tool-calling turns with 504 DEADLINE_EXCEEDED. The per-request AbortSignal in handler.ts
-  // still bounds total latency. Transient 429/5xx responses get one quick retry.
-  const ai = new GoogleGenAI({
-    apiKey,
-    httpOptions: {
-      retryOptions: { attempts: 2, initialDelay: 400, maxDelay: 1500, httpStatusCodes: [429, 500, 503, 504] },
-    },
-  });
-  return { client: ai.models, model };
+  const fallbackModel = env.GEMINI_FALLBACK_MODEL?.trim() || DEFAULT_FALLBACK_MODEL;
+  if (!apiKey) return { client: null, model, fallbackModel };
+  // No httpOptions.timeout (it becomes an X-Server-Timeout header that made Gemini abandon tool turns with
+  // 504s) and no SDK retryOptions (its retry loop ignored the AbortSignal and could hang the function).
+  // Latency is bounded by the per-request AbortSignal; resilience comes from the agent's model fallback.
+  const ai = new GoogleGenAI({ apiKey });
+  return { client: ai.models, model, fallbackModel };
 }

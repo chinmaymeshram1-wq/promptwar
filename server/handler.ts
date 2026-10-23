@@ -27,6 +27,7 @@ export interface HandlerDeps {
   /** Null when no API key is configured; agent mode then answers 503 and demo mode still works. */
   client: ModelClient | null;
   model: string;
+  fallbackModel?: string;
   limiter: RateLimiter;
   log?: (event: Record<string, unknown>) => void;
 }
@@ -74,16 +75,22 @@ export async function handlePlanRequest(req: HandlerRequest, deps: HandlerDeps):
     const plan = await runAgent(request.description, {
       client: deps.client,
       model: deps.model,
+      fallbackModel: deps.fallbackModel,
       signal: AbortSignal.timeout(AGENT_TIMEOUT_MS),
       onModelError: (error) =>
         deps.log?.({
           event: 'model_error',
-          model: deps.model,
           // Upstream messages can be long; status and a trimmed message are enough to diagnose.
           message: error instanceof Error ? error.message.slice(0, 300) : 'unknown',
         }),
     });
-    deps.log?.({ event: 'plan', source: plan.source, steps: plan.steps.length, latencyMs: plan.latencyMs });
+    deps.log?.({
+      event: 'plan',
+      source: plan.source,
+      model: plan.model,
+      steps: plan.steps.length,
+      latencyMs: plan.latencyMs,
+    });
     return { status: 200, body: plan, headers: { 'X-RateLimit-Remaining': String(limit.remaining) } };
   } catch (err) {
     if (err instanceof AgentError) return error(422, err.message);

@@ -40,6 +40,8 @@ export interface ModelClient {
 export interface AgentOptions {
   client: ModelClient;
   model: string;
+  /** Used for the rest of the run if a call to `model` fails (quota, overload, retired model). */
+  fallbackModel?: string;
   signal?: AbortSignal;
   now?: () => number;
   maxTurns?: number;
@@ -215,13 +217,14 @@ export async function runAgent(description: string, options: AgentOptions): Prom
   const state: AgentState = {};
   const steps: AgentStep[] = [];
   const contents: Content[] = [{ role: 'user', parts: [{ text: wrapUserText(description) }] }];
+  let model = options.model;
   let modelFailed = false;
 
   for (let turn = 0; turn < maxTurns && !state.narrative; turn++) {
     let response: Awaited<ReturnType<ModelClient['generateContent']>>;
     try {
       response = await options.client.generateContent({
-        model: options.model,
+        model,
         contents,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
@@ -232,6 +235,11 @@ export async function runAgent(description: string, options: AgentOptions): Prom
       });
     } catch (error) {
       options.onModelError?.(error);
+      if (options.fallbackModel && model !== options.fallbackModel && !options.signal?.aborted) {
+        model = options.fallbackModel;
+        turn--; // Retry this turn once on the fallback model.
+        continue;
+      }
       modelFailed = true;
       break;
     }
@@ -271,7 +279,7 @@ export async function runAgent(description: string, options: AgentOptions): Prom
 
   return assemblePlan({
     source: state.narrative ? 'gemini' : 'fallback',
-    model: options.model,
+    model,
     lifestyle: state.lifestyle,
     footprint: state.footprint,
     ranked,

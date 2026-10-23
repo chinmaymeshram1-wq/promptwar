@@ -107,6 +107,26 @@ describe('runAgent', () => {
     expect(plan.source).toBe('fallback');
   });
 
+  it('switches to the fallback model when the primary model fails', async () => {
+    const onModelError = vi.fn();
+    let i = 0;
+    const client: ModelClient = {
+      generateContent: vi.fn(async (params) => {
+        if (params.model === 'primary') throw new Error('429 quota exceeded');
+        return { functionCalls: HAPPY_PATH[i++] ?? [] };
+      }),
+    };
+    const plan = await runAgent('I commute by car daily to my office.', {
+      ...options(client),
+      model: 'primary',
+      fallbackModel: 'backup',
+      onModelError,
+    });
+    expect(plan.source).toBe('gemini');
+    expect(plan.model).toBe('backup');
+    expect(onModelError).toHaveBeenCalledTimes(1);
+  });
+
   it('throws a user-safe AgentError when nothing could be extracted', async () => {
     const failing: ModelClient = { generateContent: () => Promise.reject(new Error('API key invalid: sk-123')) };
     await expect(runAgent('anything at all here', options(failing))).rejects.toThrow(AgentError);
