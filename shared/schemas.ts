@@ -1,9 +1,6 @@
 import { z } from 'zod';
 import { DIETS, TRANSPORT_MODES } from './factors.js';
-import { CATEGORIES, LIMITS, type Category } from './constants.js';
-
-// Re-exported so server code can keep importing everything from one module.
-export { CATEGORIES, LIMITS, type Category };
+import { LIMITS, type Category } from './constants.js';
 
 /** Request body accepted by POST /api/plan. */
 export const PlanRequestSchema = z.discriminatedUnion('mode', [
@@ -22,7 +19,7 @@ export const PlanRequestSchema = z.discriminatedUnion('mode', [
 ]);
 export type PlanRequest = z.infer<typeof PlanRequestSchema>;
 
-export const TransportEntrySchema = z.object({
+const TransportEntrySchema = z.object({
   mode: z.enum(TRANSPORT_MODES),
   kmPerWeek: z.number().finite().min(0).max(LIMITS.maxKmPerWeek),
 });
@@ -66,24 +63,24 @@ export interface ActionOption {
   costHint: 'saves_money' | 'free' | 'investment';
 }
 
-export const AgentStepSchema = z.object({
-  tool: z.string(),
-  summary: z.string(),
+/** One entry of the agent trace shown to users. */
+export interface AgentStep {
+  tool: string;
+  summary: string;
   /** False when the tool rejected the call (invalid or out-of-order arguments). */
-  ok: z.boolean(),
-  durationMs: z.number(),
-});
-export type AgentStep = z.infer<typeof AgentStepSchema>;
+  ok: boolean;
+  durationMs: number;
+}
 
 /** The final plan submitted by the agent; text fields are length-bounded before reaching the UI. */
 export const PlanNarrativeSchema = z.object({
-  headline: z.string().trim().min(1).max(160),
-  insight: z.string().trim().min(1).max(600),
+  headline: z.string().trim().min(1).max(LIMITS.headlineMaxChars),
+  insight: z.string().trim().min(1).max(LIMITS.insightMaxChars),
   actions: z
     .array(
       z.object({
         id: z.string().max(60),
-        note: z.string().trim().max(240).optional(),
+        note: z.string().trim().max(LIMITS.noteMaxChars).optional(),
       }),
     )
     .min(1)

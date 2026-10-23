@@ -112,4 +112,23 @@ describe('App', () => {
       expect(button).toHaveAccessibleName();
     }
   });
+
+  it('keeps a finished plan when navigating away and back', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(demoPlan));
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('radio', { name: /demo mode/i }));
+    await user.click(screen.getByRole('button', { name: /build my plan/i }));
+    await screen.findByRole('heading', { level: 2, name: demoPlan.headline });
+
+    await user.click(screen.getByRole('button', { name: /methodology/i }));
+    await screen.findByRole('heading', { level: 1, name: 'Methodology' });
+    await user.click(screen.getByRole('button', { name: /plan builder/i }));
+
+    const pageTitle = await screen.findByRole('heading', { level: 1, name: 'Plan builder' });
+    expect(await screen.findByRole('heading', { level: 2, name: demoPlan.headline })).toBeInTheDocument();
+    // Returning to the page focuses its title; the old result must not steal focus again.
+    await waitFor(() => expect(pageTitle).toHaveFocus());
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });

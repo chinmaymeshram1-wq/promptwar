@@ -1,0 +1,32 @@
+/* ==========================================================================
+   Methodology
+   ========================================================================== */
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.pipeline li {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  counter-increment: step;
+}
+.pipeline li::before {
+  content: counter(step, decimal-leading-zero);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.pipeline p {
+  color: var(--muted);
+  font-size: 0.85rem;
+}

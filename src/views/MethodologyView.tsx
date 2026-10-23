@@ -163,9 +163,7 @@ export function MethodologyView() {
             </tbody>
           </table>
         </div>
-        <p className="field-hint" style={{ marginTop: 12 }}>
-          Estimates are averages for guidance, not certification.
-        </p>
+        <p className="card-footnote">Estimates are averages for guidance, not certification.</p>
       </m.section>
     </m.div>
   );

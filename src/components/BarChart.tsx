@@ -7,7 +7,7 @@ export interface BarDatum {
   value: number;
   /** Text shown at the end of the row (and read by screen readers). */
   display: string;
-  /** Suffix of a `.tone-*` class in styles.css. */
+  /** Suffix of a `.tone-*` class in styles/results.css. */
   tone: string;
 }
 

@@ -1,6 +1,7 @@
 import type { FunctionCall } from '@google/genai';
 import { describe, expect, it, vi } from 'vitest';
-import { AgentError, runAgent, wrapUserText, type ModelClient } from '../server/agent';
+import { AgentError, runAgent, type ModelClient } from '../server/agent';
+import { wrapUserText } from '../server/agentPrompt';
 
 const call = (name: string, args: Record<string, unknown> = {}): FunctionCall => ({ id: name, name, args });
 

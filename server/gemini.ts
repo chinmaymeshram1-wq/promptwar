@@ -9,8 +9,8 @@ import type { ModelClient } from './agent.js';
  * gemini-3.5-flash wrote richer plans but its free-tier quota ran out quickly (429), so it is opt-in.
  * The moving `gemini-flash-latest` alias hung on tool calls, and 2.5 models return 404 for new keys.
  */
-export const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
-export const DEFAULT_FALLBACK_MODEL = 'gemini-3-flash-preview';
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
+const DEFAULT_FALLBACK_MODEL = 'gemini-3-flash-preview';
 
 export interface GeminiConfig {
   client: ModelClient | null;

@@ -3,7 +3,7 @@
  * larger transitions around 250-400 ms. Reduced motion is handled globally by
  * <MotionProvider> (transform animations are skipped; opacity remains).
  */
-import type { Transition, Variants } from 'motion/react';
+import type { Variants } from 'motion/react';
 
 export const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
@@ -12,8 +12,6 @@ export const DURATION = {
   base: 0.28,
   large: 0.38,
 } as const;
-
-export const springTap: Transition = { type: 'spring', stiffness: 500, damping: 32 };
 
 /** Page and panel entrance: fade with a small rise. */
 export const fadeUp: Variants = {

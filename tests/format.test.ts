@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { findDemoProfile, runDemo } from '../shared/demo';
-import { traceSummary } from '../src/components/PlanResult';
-import { formatKg, percentReduction } from '../src/format';
+import { formatKg, percentReduction, traceSummary } from '../src/format';
 
 const plan = runDemo(findDemoProfile('city_commuter')!, () => 0);
 

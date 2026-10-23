@@ -2,6 +2,20 @@
 
 All notable changes to EcoPilot. Dates are 2026-10-23 (built during PromptWars).
 
+## 1.2.0
+
+### Changed
+
+- Agent split into `agentPrompt.ts` (instruction, declarations, safety), `agentTools.ts` (validated execution) and `agent.ts` (the loop).
+- Step summaries and tool names shared by the agent and demo mode; schema limits are the single source for tool declarations.
+- UI: `usePlanRequest` hook, `views/` for pages, `components/results/` for the dashboard parts; no inline styles; stylesheet split by concern.
+- Plan state survives page navigation, and results take focus only the first time they appear.
+
+### Added
+
+- knip dead-code check in CI (no unused files, exports or dependencies).
+- Tests for the request hook, shared summaries and navigation (112 tests, 93% coverage).
+
 ## 1.1.0
 
 ### Added

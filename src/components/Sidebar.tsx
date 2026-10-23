@@ -1,7 +1,7 @@
 import { m } from 'motion/react';
 import type { ComponentType } from 'react';
 import { DURATION, EASE_OUT } from '../motion/variants';
-import type { Theme } from '../useTheme';
+import type { Theme } from '../hooks/useTheme';
 import { BookIcon, Logo, MoonIcon, SparkIcon, SunIcon } from './icons';
 
 export type View = 'plan' | 'methodology';

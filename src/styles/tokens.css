@@ -1,0 +1,67 @@
+/* ==========================================================================
+   EcoPilot design tokens. Dark is the primary theme; light is opt-in via
+   [data-theme='light'] on <html>.
+   ========================================================================== */
+:root {
+  --bg: #0d1510;
+  --surface: #17251b;
+  --surface-2: #1c2d21;
+  --surface-hover: #213427;
+  --border: #26392c;
+  --border-strong: #335040;
+  --text: #eaf3ec;
+  --muted: #9bafa1;
+  --primary: #207a50;
+  --primary-hover: #258c5c;
+  --on-primary: #ffffff;
+  --accent: #48d49b;
+  --accent-soft: rgb(72 212 155 / 12%);
+  --danger: #ff8f85;
+  --danger-soft: rgb(255 143 133 / 10%);
+  --warning: #e8b04a;
+  --focus: #48d49b;
+  --track: #223328;
+  --ref: #6f8577;
+  --cat-transport: #6fa8e8;
+  --cat-electricity: #e8b04a;
+  --cat-cooking: #ec8a66;
+  --cat-food: #48d49b;
+  --cat-waste: #a796f0;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-lg: 0 8px 24px rgb(0 0 0 / 28%);
+  --sidebar-w: 248px;
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f5f8f4;
+  --surface: #ffffff;
+  --surface-2: #eef3ee;
+  --surface-hover: #e6eee7;
+  --border: #d9e2db;
+  --border-strong: #bfcdc3;
+  --text: #13201a;
+  --muted: #4d5d52;
+  --accent: #207a50;
+  --accent-soft: rgb(32 122 80 / 10%);
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --warning: #9a6200;
+  --focus: #207a50;
+  --track: #e3ebe5;
+  --ref: #8a9a8f;
+  --cat-transport: #2f6fb3;
+  --cat-electricity: #b06f00;
+  --cat-cooking: #b4451f;
+  --cat-food: #207a50;
+  --cat-waste: #6b5bb5;
+  --shadow: 0 1px 2px rgb(16 24 20 / 6%);
+  --shadow-lg: 0 8px 24px rgb(16 24 20 / 8%);
+  color-scheme: light;
+}

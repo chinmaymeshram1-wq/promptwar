@@ -1,0 +1,182 @@
+/* ==========================================================================
+   States: empty, loading, error
+   ========================================================================== */
+.empty {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  min-height: 420px;
+  padding: 40px 24px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.empty h2 {
+  font-size: 1.1rem;
+}
+.empty p {
+  max-width: 44ch;
+  color: var(--muted);
+}
+
+.progress {
+  position: relative;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--track);
+}
+.progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--accent);
+  animation: progress-slide 1.4s ease-in-out infinite;
+}
+@keyframes progress-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.alert {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+}
+.alert strong {
+  color: var(--danger);
+}
+
+/* ==========================================================================
+   Workflow timeline
+   ========================================================================== */
+.timeline {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.timeline-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 26px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--border);
+}
+.timeline-item[data-status='completed']:not(:last-child)::before {
+  background: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.step-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--muted);
+}
+[data-status='completed'] .step-icon {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+}
+[data-status='failed'] .step-icon {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--bg);
+}
+[data-status='running'] .step-icon {
+  border-color: var(--accent);
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.step-glyph {
+  display: grid;
+}
+.step-body {
+  display: grid;
+  gap: 2px;
+}
+.step-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.step-title code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--accent);
+}
+.step-detail {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+[data-status='pending'] .step-title {
+  color: var(--muted);
+}
+.step-meta {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.disclosure {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+.disclosure svg {
+  transition: transform 200ms ease;
+}
+.disclosure[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.disclosure-panel {
+  overflow: hidden;
+}
+.disclosure-panel > div {
+  padding-top: 16px;
+}

@@ -3,9 +3,11 @@
  * with no model call. Lets anyone evaluate EcoPilot without an API key and keeps the app
  * useful when the AI service is unavailable.
  */
-import { assemblePlan, deterministicNarrative } from './plan.js';
+import { TOOL_NAMES } from './constants.js';
 import type { DemoProfile } from './demoProfiles.js';
+import { assemblePlan, deterministicNarrative } from './plan.js';
 import { LifestyleSchema, type AgentStep, type PlanResponse } from './schemas.js';
+import { summarizeBenchmark, summarizeFootprint, summarizePlan, summarizeRanking } from './summaries.js';
 import { calculateFootprint, compareToBenchmarks, rankActions } from './tools.js';
 
 export { DEMO_PROFILES, findDemoProfile, type DemoProfile } from './demoProfiles.js';
@@ -21,25 +23,17 @@ export function runDemo(profile: DemoProfile, now: () => number = () => performa
   };
 
   const lifestyle = LifestyleSchema.parse(profile.lifestyle);
-  const footprint = timed(
-    'calculate_footprint',
-    () => calculateFootprint(lifestyle),
-    (f) => `Calculated ${Math.round(f.totalKgPerYear)} kg CO₂e/year across ${5 - f.missing.length} categories`,
-  );
+  const footprint = timed(TOOL_NAMES.calculateFootprint, () => calculateFootprint(lifestyle), summarizeFootprint);
   const benchmark = timed(
-    'compare_to_benchmarks',
+    TOOL_NAMES.compareToBenchmarks,
     () => compareToBenchmarks(footprint.totalKgPerYear),
-    (b) => `Compared ${b.totalTonnes} t with the 2.3 t Paris-aligned target (${b.rating.replace('_', ' ')})`,
+    summarizeBenchmark,
   );
-  const ranked = timed(
-    'rank_actions',
-    () => rankActions(lifestyle, footprint),
-    (r) => `Ranked ${r.length} applicable actions by annual saving`,
-  );
+  const ranked = timed(TOOL_NAMES.rankActions, () => rankActions(lifestyle, footprint), summarizeRanking);
   const narrative = timed(
-    'submit_plan',
+    TOOL_NAMES.submitPlan,
     () => deterministicNarrative(footprint, benchmark, ranked),
-    (n) => `Submitted a plan with ${n.actions.length} actions`,
+    summarizePlan,
   );
 
   return assemblePlan({ source: 'demo', lifestyle, footprint, ranked, narrative, steps, startedAt, now });

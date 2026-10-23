@@ -1,0 +1,84 @@
+/* ==========================================================================
+   Ambient background (decorative, compositor-only animations)
+   ========================================================================== */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ambient-glow {
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.1;
+  will-change: transform;
+}
+.glow-a {
+  top: -25vmax;
+  right: -15vmax;
+  background: radial-gradient(circle, #48d49b 0%, transparent 65%);
+  animation: canopy-drift-a 48s ease-in-out infinite alternate;
+}
+.glow-b {
+  bottom: -30vmax;
+  left: 5vmax;
+  background: radial-gradient(circle, #207a50 0%, transparent 65%);
+  opacity: 0.16;
+  animation: canopy-drift-b 62s ease-in-out infinite alternate;
+}
+:root[data-theme='light'] .ambient-glow {
+  opacity: 0.08;
+}
+@keyframes canopy-drift-a {
+  to {
+    transform: translate3d(-8vmax, 6vmax, 0) scale(1.08);
+  }
+}
+@keyframes canopy-drift-b {
+  to {
+    transform: translate3d(10vmax, -5vmax, 0) scale(0.94);
+  }
+}
+
+.ambient-leaf {
+  position: absolute;
+  top: -40px;
+  width: var(--leaf-size);
+  height: var(--leaf-size);
+  color: var(--accent);
+  opacity: 0;
+  animation: leaf-fall var(--leaf-duration) linear var(--leaf-delay) infinite;
+  will-change: transform, opacity;
+}
+.ambient-leaf svg {
+  display: block;
+  animation: leaf-sway calc(var(--leaf-duration) / 5) ease-in-out var(--leaf-delay) infinite alternate;
+}
+@keyframes leaf-fall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.22;
+  }
+  85% {
+    opacity: 0.22;
+  }
+  100% {
+    transform: translate3d(var(--leaf-sway), 110vh, 0) rotate(220deg);
+    opacity: 0;
+  }
+}
+@keyframes leaf-sway {
+  from {
+    transform: translateX(-18px) rotate(-18deg);
+  }
+  to {
+    transform: translateX(18px) rotate(22deg);
+  }
+}

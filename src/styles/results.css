@@ -1,0 +1,135 @@
+/* ==========================================================================
+   Results
+   ========================================================================== */
+.summary-card {
+  display: grid;
+  gap: 10px;
+}
+.summary-card .badge {
+  justify-self: start;
+}
+.summary-card h2 {
+  font-size: 1.3rem;
+}
+.summary-card h2:focus {
+  outline: none;
+}
+.summary-card .insight {
+  color: var(--muted);
+}
+
+.kpis {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.kpi {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+}
+.kpi dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.kpi dd {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 1.6rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.kpi .unit {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.kpi-positive dd {
+  color: var(--accent);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.bars {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label value'
+    'bar bar';
+  align-items: baseline;
+  gap: 6px 12px;
+  font-size: 0.88rem;
+}
+.bar-label {
+  grid-area: label;
+}
+.bar-track {
+  grid-area: bar;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--track);
+}
+.bar-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  transform-origin: left center;
+}
+.bar-value {
+  grid-area: value;
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tone-transport {
+  background: var(--cat-transport);
+}
+.tone-electricity {
+  background: var(--cat-electricity);
+}
+.tone-cooking {
+  background: var(--cat-cooking);
+}
+.tone-food {
+  background: var(--cat-food);
+}
+.tone-waste {
+  background: var(--cat-waste);
+}
+.tone-you {
+  background: var(--accent);
+}
+.tone-ref {
+  background: var(--ref);
+}
+
+.action-title {
+  font-weight: 600;
+}
+.action-note {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.saving {
+  color: var(--accent);
+  font-weight: 700;
+}

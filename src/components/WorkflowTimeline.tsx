@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { DURATION, EASE_OUT, fadeUp, stagger } from '../motion/variants';
 import { CheckIcon, CrossIcon } from './icons';
 
-export type StepStatus = 'pending' | 'running' | 'completed' | 'failed';
+type StepStatus = 'pending' | 'running' | 'completed' | 'failed';
 
 export interface WorkflowStep {
   key: string;
@@ -27,11 +27,11 @@ function StepIcon({ status }: { status: StepStatus }) {
         {(status === 'completed' || status === 'failed') && (
           <m.span
             key={status}
+            className="step-glyph"
             initial={{ scale: 0.4, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.4, opacity: 0 }}
             transition={{ duration: DURATION.micro, ease: EASE_OUT }}
-            style={{ display: 'grid' }}
           >
             {status === 'completed' ? <CheckIcon size={12} /> : <CrossIcon size={12} />}
           </m.span>

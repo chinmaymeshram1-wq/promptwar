@@ -17,14 +17,8 @@ import {
   type Diet,
   type TransportMode,
 } from './factors.js';
-import {
-  CATEGORIES,
-  type ActionOption,
-  type BenchmarkComparison,
-  type Category,
-  type Footprint,
-  type Lifestyle,
-} from './schemas.js';
+import { CATEGORIES, type Category } from './constants.js';
+import type { ActionOption, BenchmarkComparison, Footprint, Lifestyle } from './schemas.js';
 
 const round = (value: number, digits = 1): number => {
   const p = 10 ** digits;
@@ -214,8 +208,6 @@ const ACTION_CATALOG: readonly ActionTemplate[] = [
     saving: (_l, f) => f.byCategory.waste * 0.5,
   },
 ];
-
-export const ACTION_IDS: readonly string[] = ACTION_CATALOG.map((a) => a.id);
 
 /** Tool 3: every applicable action with its quantified annual saving, best first. */
 export function rankActions(lifestyle: Lifestyle, footprint = calculateFootprint(lifestyle)): ActionOption[] {

@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Lint, type-check, test, audit, build
+    name: Lint, type-check, dead code, test, audit, build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -28,6 +28,8 @@ jobs:
         run: npm run lint
       - name: Type-check
         run: npm run typecheck
+      - name: Dead code (unused files, exports, dependencies)
+        run: npm run knip
       - name: Test with coverage floors
         run: npm run coverage
       - name: Dependency audit
