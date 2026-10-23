@@ -92,7 +92,7 @@ describe('App', () => {
     const heading = await screen.findByRole('heading', { level: 1, name: 'Methodology' });
     await waitFor(() => expect(heading).toHaveFocus());
     expect(screen.getByRole('button', { name: /methodology/i })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByText('0.716 kg / kWh')).toBeInTheDocument();
+    expect(await screen.findByText('0.716 kg / kWh')).toBeInTheDocument();
     await expectNoAxeViolations(container);
   });
 

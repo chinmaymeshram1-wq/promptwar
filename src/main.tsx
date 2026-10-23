@@ -13,7 +13,11 @@ createRoot(root).render(
   </StrictMode>,
 );
 
-// Load Firebase after the first paint so it never delays the UI.
-const startTelemetry = () => void initTelemetry();
-if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(startTelemetry);
-else setTimeout(startTelemetry, 1500);
+// Start Firebase on the first user interaction, so the Google tag never competes with the initial page load.
+// Performance Monitoring still reads this page load's Navigation Timing retroactively.
+const INTERACTIONS = ['pointerdown', 'keydown', 'scroll', 'touchstart'] as const;
+const startTelemetry = () => {
+  INTERACTIONS.forEach((type) => window.removeEventListener(type, startTelemetry));
+  void initTelemetry();
+};
+INTERACTIONS.forEach((type) => window.addEventListener(type, startTelemetry, { once: true, passive: true }));

@@ -1,18 +1,23 @@
 import { AnimatePresence, m } from 'motion/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import type { PlanRequest, PlanResponse } from '../shared/schemas';
 import { PlanRequestError, requestPlan } from './api';
-import { MethodologyView } from './components/MethodologyView';
+import { AmbientBackground } from './components/AmbientBackground';
 import { PageHeader } from './components/PageHeader';
 import { PlanForm } from './components/PlanForm';
-import { PlanResult } from './components/PlanResult';
 import { EmptyState, ErrorState, RunProgress } from './components/RunStatus';
 import { Sidebar, type View } from './components/Sidebar';
 import { MotionProvider } from './motion/MotionProvider';
 import { fadeUp } from './motion/variants';
 import { trackError, trackPlan } from './telemetry';
 import { useTheme } from './useTheme';
-import { AmbientBackground } from './components/AmbientBackground';
+
+// Code-split views that are not needed for the first paint.
+const loadPlanResult = () => import('./components/PlanResult');
+const PlanResult = lazy(() => loadPlanResult().then((mod) => ({ default: mod.PlanResult })));
+const MethodologyView = lazy(() =>
+  import('./components/MethodologyView').then((mod) => ({ default: mod.MethodologyView })),
+);
 
 type Status =
   | { kind: 'idle' }
@@ -60,6 +65,7 @@ export function App() {
     const controller = new AbortController();
     controllerRef.current = controller;
     setStatus({ kind: 'loading', mode: request.mode });
+    void loadPlanResult(); // Fetch the dashboard code while the request is in flight.
     try {
       const plan = await requestPlan(request, controller.signal);
       setStatus({ kind: 'done', plan });
@@ -107,13 +113,17 @@ export function App() {
                           <ErrorState key="error" message={status.message} suggestDemo={status.suggestDemo} />
                         )}
                         {status.kind === 'done' && (
-                          <PlanResult key="done" ref={focusResultHeading} plan={status.plan} />
+                          <Suspense key="done" fallback={null}>
+                            <PlanResult ref={focusResultHeading} plan={status.plan} />
+                          </Suspense>
                         )}
                       </AnimatePresence>
                     </div>
                   </div>
                 ) : (
-                  <MethodologyView />
+                  <Suspense fallback={null}>
+                    <MethodologyView />
+                  </Suspense>
                 )}
               </m.div>
             </AnimatePresence>
