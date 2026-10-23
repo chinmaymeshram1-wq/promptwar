@@ -1,5 +1,7 @@
 # 🌱 EcoPilot: Agentic AI Carbon Coach
 
+> 🏆 **1st Prize Winner, PromptWars Hackathon 2026** (Google for Developers × H2S × VYOM Club, NMIET) · **₹10,000** · AI-evaluated score **97.27 / 100** · [See the win](#-recognition)
+
 > **Describe your week in plain words. A Google Gemini agent turns it into a measurable, personalised carbon-reduction plan, and every number comes from audited, tested code, never from the language model.**
 
 [![CI](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml/badge.svg)](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml)
@@ -11,9 +13,29 @@
 ![Gemini](https://img.shields.io/badge/Google-Gemini%20API-4285F4)
 ![Firebase](https://img.shields.io/badge/Google-Firebase-FFCA28)
 ![Cloud Run](https://img.shields.io/badge/Google-Cloud%20Run%20ready-4285F4)
+![1st Prize](https://img.shields.io/badge/PromptWars%202026-1st%20Prize-FFD700)
 
 **Live demo:** **https://promptwar-opal.vercel.app** (try **Demo mode** for an instant result, or **AI agent** mode for a Gemini-planned one)
 · **Domain:** Sustainability · **Challenge:** Build Beyond AI, PromptWars Hackathon 2026 (VYOM Club, NMIET)
+
+---
+
+## 🏆 Recognition
+
+**EcoPilot won 1st Prize (₹10,000) at PromptWars 2026**, the "Build with AI" hackathon presented by **Google for Developers** and **H2S** with **VYOM Club, NMIET**, on 23 October 2026.
+
+| Round                                         | Result                                                                                                                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Round 1: AI-evaluated code review             | **97.27 / 100**, ranked 2nd. Security 100 · Efficiency 100 · Accessibility 100 · Problem Statement Alignment 100 · Testing 98 · Code Quality 89 (since refactored) |
+| Round 2: pitch and viva to judges and faculty | **1st Prize**                                                                                                                                                      |
+
+![Chinmay Meshram receiving the PromptWars 2026 winner's cheque with faculty and organisers](docs/winner/award-ceremony.jpg)
+
+| Winner                                                                                     | The cheque                                                                             |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| ![Chinmay Meshram holding the ₹10,000 winner's cheque](docs/winner/winner-with-cheque.jpg) | ![PromptWars × VYOM NMIET winner's cheque for ₹10,000](docs/winner/winning-cheque.jpg) |
+
+Built by **[Chinmay Meshram](https://www.linkedin.com/in/chinmaymeshram/)**, JSPM's Rajarshi Shahu College of Engineering, Pune.
 
 ---
 

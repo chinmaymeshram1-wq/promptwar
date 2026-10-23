@@ -11,3 +11,5 @@ Thumbs.db
 # Event material, not part of the project
 AGENDA OF EVENT.pdf
 dist-server/
+# Original photos (HEIC); web-sized copies live in docs/winner
+picturesofme/
