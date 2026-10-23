@@ -40,6 +40,21 @@ function Kpi({ label, value, format, unit, positive }: KpiProps) {
   );
 }
 
+const tokenFormatter = new Intl.NumberFormat('en-IN');
+
+/** One-line, measured efficiency summary: tool calls, latency, model calls, tokens and cache status. */
+export function traceSummary(plan: PlanResponse): string {
+  const parts = [`${plan.steps.length} tool calls`];
+  if (plan.cached) parts.push('served from cache, 0 tokens');
+  else {
+    parts.push(`${(plan.latencyMs / 1000).toFixed(1)} s`);
+    if (plan.usage)
+      parts.push(`${plan.usage.modelCalls} model calls`, `${tokenFormatter.format(plan.usage.totalTokens)} tokens`);
+  }
+  if (plan.model) parts.push(plan.model);
+  return parts.join(' · ');
+}
+
 function AgentTrace({ plan }: { plan: PlanResponse }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -61,11 +76,7 @@ function AgentTrace({ plan }: { plan: PlanResponse }) {
         onClick={() => setOpen((o) => !o)}
       >
         <span>
-          How the agent worked{' '}
-          <span className="card-subtitle">
-            {plan.steps.length} tool calls · {(plan.latencyMs / 1000).toFixed(1)} s
-            {plan.model ? ` · ${plan.model}` : ''}
-          </span>
+          How the agent worked <span className="card-subtitle">{traceSummary(plan)}</span>
         </span>
         <ChevronIcon />
       </button>

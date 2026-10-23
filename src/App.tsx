@@ -99,7 +99,7 @@ export function App() {
                 {view === 'plan' ? (
                   <div className="workspace">
                     <div className="workspace-input">
-                      <PlanForm busy={status.kind === 'loading'} onSubmit={handleSubmit} />
+                      <PlanForm busy={status.kind === 'loading'} onSubmit={(request) => void handleSubmit(request)} />
                     </div>
                     <div>
                       <div role="status" aria-live="polite" className="visually-hidden">

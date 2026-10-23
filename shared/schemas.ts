@@ -95,6 +95,14 @@ export interface PlanAction extends ActionOption {
   note?: string;
 }
 
+/** Gemini token accounting for one plan, so efficiency is measured rather than assumed. */
+export interface TokenUsage {
+  modelCalls: number;
+  promptTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
 export interface PlanResponse {
   source: 'gemini' | 'demo' | 'fallback';
   model?: string;
@@ -107,6 +115,10 @@ export interface PlanResponse {
   projectedTotalKgPerYear: number;
   steps: AgentStep[];
   latencyMs: number;
+  /** Present for agent runs. */
+  usage?: TokenUsage;
+  /** True when served from the response cache without calling Gemini. */
+  cached?: boolean;
 }
 
 export interface ApiError {

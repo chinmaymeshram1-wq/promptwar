@@ -8,6 +8,7 @@ import type {
   PlanAction,
   PlanNarrative,
   PlanResponse,
+  TokenUsage,
 } from './schemas.js';
 
 const CATEGORY_LABEL: Record<keyof Footprint['byCategory'], string> = {
@@ -58,6 +59,7 @@ export function assemblePlan(input: {
   ranked: readonly ActionOption[];
   narrative: PlanNarrative;
   steps: AgentStep[];
+  usage?: TokenUsage;
   startedAt: number;
   now: () => number;
 }): PlanResponse {
@@ -83,5 +85,6 @@ export function assemblePlan(input: {
     projectedTotalKgPerYear: projectTotal(input.footprint, actions),
     steps: input.steps,
     latencyMs: Math.round(input.now() - input.startedAt),
+    ...(input.usage ? { usage: input.usage } : {}),
   };
 }

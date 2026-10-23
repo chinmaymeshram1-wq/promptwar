@@ -7,6 +7,8 @@
  */
 import {
   FunctionCallingConfigMode,
+  HarmBlockThreshold,
+  HarmCategory,
   type Content,
   type FunctionCall,
   type FunctionDeclaration,
@@ -24,16 +26,26 @@ import {
   type Lifestyle,
   type PlanNarrative,
   type PlanResponse,
+  type TokenUsage,
 } from '../shared/schemas.js';
 import { calculateFootprint, compareToBenchmarks, rankActions } from '../shared/tools.js';
 
 export const MAX_TURNS = 6;
+
+/** Block clearly harmful content in anything the model writes back to users. */
+const SAFETY_SETTINGS = [
+  HarmCategory.HARM_CATEGORY_HARASSMENT,
+  HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+  HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+  HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+].map((category) => ({ category, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE }));
 
 /** Minimal surface of `GoogleGenAI['models']` the agent depends on (easy to fake in tests). */
 export interface ModelClient {
   generateContent(params: GenerateContentParameters): Promise<{
     functionCalls?: FunctionCall[];
     candidates?: { content?: Content }[];
+    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number };
   }>;
 }
 
@@ -151,7 +163,7 @@ const firstIssue = (error: { issues: { path: PropertyKey[]; message: string }[] 
 };
 
 function executeTool(call: FunctionCall, state: AgentState): { result: ToolResult; summary: string } {
-  switch (call.name) {
+  switch (call.name ?? '') {
     case 'calculate_footprint': {
       const parsed = LifestyleSchema.safeParse(call.args ?? {});
       if (!parsed.success) {
@@ -219,6 +231,7 @@ export async function runAgent(description: string, options: AgentOptions): Prom
   const contents: Content[] = [{ role: 'user', parts: [{ text: wrapUserText(description) }] }];
   let model = options.model;
   let modelFailed = false;
+  const usage: TokenUsage = { modelCalls: 0, promptTokens: 0, outputTokens: 0, totalTokens: 0 };
 
   for (let turn = 0; turn < maxTurns && !state.narrative; turn++) {
     let response: Awaited<ReturnType<ModelClient['generateContent']>>;
@@ -230,6 +243,7 @@ export async function runAgent(description: string, options: AgentOptions): Prom
           systemInstruction: SYSTEM_INSTRUCTION,
           tools: [{ functionDeclarations: FUNCTION_DECLARATIONS }],
           toolConfig: { functionCallingConfig: { mode: FunctionCallingConfigMode.ANY } },
+          safetySettings: SAFETY_SETTINGS,
           abortSignal: options.signal,
         },
       });
@@ -243,6 +257,11 @@ export async function runAgent(description: string, options: AgentOptions): Prom
       modelFailed = true;
       break;
     }
+
+    usage.modelCalls++;
+    usage.promptTokens += response.usageMetadata?.promptTokenCount ?? 0;
+    usage.outputTokens += response.usageMetadata?.candidatesTokenCount ?? 0;
+    usage.totalTokens += response.usageMetadata?.totalTokenCount ?? 0;
 
     const calls = response.functionCalls ?? [];
     if (calls.length === 0) break;
@@ -285,6 +304,7 @@ export async function runAgent(description: string, options: AgentOptions): Prom
     ranked,
     narrative,
     steps,
+    usage,
     startedAt,
     now,
   });

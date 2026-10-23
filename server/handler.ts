@@ -5,6 +5,7 @@
 import { findDemoProfile, runDemo } from '../shared/demo.js';
 import { PlanRequestSchema, type ApiError, type PlanResponse } from '../shared/schemas.js';
 import { AgentError, runAgent, type ModelClient } from './agent.js';
+import { cacheKey, type TtlCache } from './cache.js';
 import type { RateLimiter } from './rateLimit.js';
 
 export const MAX_BODY_BYTES = 4 * 1024;
@@ -15,6 +16,11 @@ export interface HandlerRequest {
   contentType: string | undefined;
   clientIp: string;
   rawBody: string;
+  /** Browser-sent Origin header; when present it must match `host` (blocks cross-site use of the API). */
+  origin?: string;
+  host?: string;
+  /** Correlates log lines for one request. */
+  requestId?: string;
 }
 
 export interface HandlerResponse {
@@ -29,6 +35,7 @@ export interface HandlerDeps {
   model: string;
   fallbackModel?: string;
   limiter: RateLimiter;
+  cache?: TtlCache<PlanResponse>;
   log?: (event: Record<string, unknown>) => void;
 }
 
@@ -38,8 +45,20 @@ const error = (status: number, message: string, headers?: Record<string, string>
   headers,
 });
 
+/** True when there is no Origin header (non-browser client) or it names the same host. */
+export function isSameOrigin(origin: string | undefined, host: string | undefined): boolean {
+  if (!origin) return true;
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+}
+
 export async function handlePlanRequest(req: HandlerRequest, deps: HandlerDeps): Promise<HandlerResponse> {
   if (req.method !== 'POST') return error(405, 'Method not allowed.', { Allow: 'POST' });
+  if (!isSameOrigin(req.origin, req.host)) return error(403, 'Cross-origin requests are not allowed.');
+  const log = (event: Record<string, unknown>) => deps.log?.({ requestId: req.requestId, ...event });
   if (!req.contentType?.toLowerCase().startsWith('application/json')) {
     return error(415, 'Content-Type must be application/json.');
   }
@@ -61,6 +80,13 @@ export async function handlePlanRequest(req: HandlerRequest, deps: HandlerDeps):
     return { status: 200, body: runDemo(profile) };
   }
 
+  const key = cacheKey(request.description);
+  const cached = deps.cache?.get(key);
+  if (cached) {
+    log({ event: 'plan', source: cached.source, cached: true });
+    return { status: 200, body: { ...cached, cached: true, latencyMs: 0 } };
+  }
+
   const limit = deps.limiter.check(req.clientIp);
   if (!limit.allowed) {
     return {
@@ -78,24 +104,27 @@ export async function handlePlanRequest(req: HandlerRequest, deps: HandlerDeps):
       fallbackModel: deps.fallbackModel,
       signal: AbortSignal.timeout(AGENT_TIMEOUT_MS),
       onModelError: (error) =>
-        deps.log?.({
+        log({
           event: 'model_error',
           // Upstream messages can be long; status and a trimmed message are enough to diagnose.
           message: error instanceof Error ? error.message.slice(0, 300) : 'unknown',
         }),
     });
-    deps.log?.({
+    log({
       event: 'plan',
       source: plan.source,
       model: plan.model,
       steps: plan.steps.length,
       latencyMs: plan.latencyMs,
+      tokens: plan.usage?.totalTokens,
     });
+    // Only fully model-planned results are cached; fallbacks should get a fresh attempt next time.
+    if (plan.source === 'gemini') deps.cache?.set(key, plan);
     return { status: 200, body: plan, headers: { 'X-RateLimit-Remaining': String(limit.remaining) } };
   } catch (err) {
     if (err instanceof AgentError) return error(422, err.message);
     // Never leak internals (stack traces, upstream messages) to the client.
-    deps.log?.({ event: 'error', message: err instanceof Error ? err.message : 'unknown' });
+    log({ event: 'error', message: err instanceof Error ? err.message : 'unknown' });
     return error(500, 'Something went wrong. Please try again.');
   }
 }

@@ -11,10 +11,10 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
       matches: false,
       media: query,
       onchange: null,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
       dispatchEvent: () => false,
     }) as MediaQueryList;
 }

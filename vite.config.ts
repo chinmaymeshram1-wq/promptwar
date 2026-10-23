@@ -19,19 +19,28 @@ function localApi(): Plugin {
     name: 'ecopilot-local-api',
     configureServer(server) {
       Object.assign(process.env, loadEnv(server.config.mode, process.cwd(), ''));
-      server.middlewares.use('/api/plan', async (req, res) => {
-        const { handleWebRequest } = (await server.ssrLoadModule('/server/http.ts')) as typeof HttpModule;
-        const body = req.method === 'POST' ? await readBody(req) : undefined;
-        const response = await handleWebRequest(
-          new Request(`http://localhost${req.url ?? ''}`, {
-            method: req.method,
-            headers: req.headers as Record<string, string>,
-            body,
-          }),
-        );
-        res.statusCode = response.status;
-        response.headers.forEach((value, key) => res.setHeader(key, value));
-        res.end(await response.text());
+      server.middlewares.use('/api/plan', (req, res) => {
+        const respond = async () => {
+          const { handleWebRequest } = (await server.ssrLoadModule('/server/http.ts')) as typeof HttpModule;
+          const body = req.method === 'POST' ? await readBody(req) : undefined;
+          const response = await handleWebRequest(
+            new Request(`http://localhost${req.url ?? ''}`, {
+              method: req.method,
+              headers: req.headers as Record<string, string>,
+              body,
+            }),
+          );
+          res.statusCode = response.status;
+          response.headers.forEach((value, key) => res.setHeader(key, value));
+          res.end(await response.text());
+        };
+        // Never leave a request hanging: unexpected failures become a JSON 500.
+        respond().catch((error: unknown) => {
+          server.config.logger.error(`/api/plan failed: ${String(error)}`);
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: 'Something went wrong. Please try again.' }));
+        });
       });
     },
   };
