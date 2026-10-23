@@ -106,7 +106,8 @@ export function App() {
                         {status.kind === 'loading' && 'Building your plan…'}
                         {status.kind === 'done' && 'Your plan is ready.'}
                       </div>
-                      <AnimatePresence mode="wait">
+                      {/* initial={false}: content present at first paint renders immediately (no fade-in delay). */}
+                      <AnimatePresence mode="wait" initial={false}>
                         {status.kind === 'idle' && <EmptyState key="idle" />}
                         {status.kind === 'loading' && <RunProgress key="loading" mode={status.mode} />}
                         {status.kind === 'error' && (
