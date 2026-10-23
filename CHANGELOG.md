@@ -10,6 +10,7 @@ All notable changes to EcoPilot. Dates are 2026-10-23 (built during PromptWars).
 - End-to-end smoke test (`scripts/smoke.mjs`), run against the built container in CI and against the live site.
 - Response cache (TTL + LRU, hashed keys): repeated plans are returned in milliseconds with no tokens spent.
 - Gemini token accounting per plan, shown in the agent trace.
+- Per-call 15 s timeout: a stuck Gemini call is cancelled and retried on the fallback model.
 - Same-origin enforcement (403), `X-Request-Id` on every API response and log line, and Gemini safety settings.
 - OpenAPI 3.1 specification, an architecture guide and contributing guidelines.
 

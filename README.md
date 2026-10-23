@@ -3,7 +3,7 @@
 > **Describe your week in plain words. A Google Gemini agent turns it into a measurable, personalised carbon-reduction plan, and every number comes from audited, tested code, never from the language model.**
 
 [![CI](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml/badge.svg)](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-99%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-100%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-92.5%25-brightgreen)
 ![Lighthouse](https://img.shields.io/badge/Lighthouse-100%20%C2%B7%20100%20%C2%B7%20100%20%C2%B7%20100-brightgreen)
 ![axe](https://img.shields.io/badge/axe-0%20violations-brightgreen)
@@ -19,13 +19,13 @@
 
 ## At a glance
 
-|                        |                                                                                                                                                                                                |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Problem**            | People want to cut emissions but do not know where theirs come from or which change matters most for _them_. Calculators give a number, not a plan.                                            |
-| **Solution**           | An agentic app: Gemini extracts structured data from free text and orchestrates four deterministic tools that calculate, benchmark, rank and project, then explains a personalised plan.       |
-| **Why it is reliable** | The model never produces a number. Tools ignore model-supplied numbers, all inputs are schema-validated, a fallback model and a deterministic narrative mean users always get a correct plan.  |
-| **Google technology**  | Gemini API (function-calling agent, system instructions, safety settings), Firebase Performance Monitoring and Analytics, Cloud Run-ready container verified in CI.                            |
-| **Evidence**           | Lighthouse desktop 100 in every category · axe 0 violations · 99 tests, 92.5% coverage · 0 npm audit vulnerabilities · 14-check end-to-end smoke test against the container and the live site. |
+|                        |                                                                                                                                                                                                 |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Problem**            | People want to cut emissions but do not know where theirs come from or which change matters most for _them_. Calculators give a number, not a plan.                                             |
+| **Solution**           | An agentic app: Gemini extracts structured data from free text and orchestrates four deterministic tools that calculate, benchmark, rank and project, then explains a personalised plan.        |
+| **Why it is reliable** | The model never produces a number. Tools ignore model-supplied numbers, all inputs are schema-validated, a fallback model and a deterministic narrative mean users always get a correct plan.   |
+| **Google technology**  | Gemini API (function-calling agent, system instructions, safety settings), Firebase Performance Monitoring and Analytics, Cloud Run-ready container verified in CI.                             |
+| **Evidence**           | Lighthouse desktop 100 in every category · axe 0 violations · 100 tests, 92.5% coverage · 0 npm audit vulnerabilities · 14-check end-to-end smoke test against the container and the live site. |
 
 ## Screenshots
 
@@ -64,7 +64,7 @@ flowchart LR
     E -->|Vercel Function| H
     E -->|Cloud Run container| H
     H[handler.ts<br/>same-origin · content type · 4 KB cap · Zod<br/>cache · per-IP rate limit] -- demo --> T
-    H -- agent --> A[Agent loop<br/>≤ 6 turns · 45 s abort · model fallback]
+    H -- agent --> A[Agent loop<br/>≤ 6 turns · 15 s per call · 45 s total · model fallback]
     A <-- function calling --> G[(Google Gemini API<br/>gemini-3.1-flash-lite<br/>fallback gemini-3-flash-preview)]
     A --> T[Pure tools<br/>calculate · benchmark · rank · submit]
     T --> P[assemblePlan<br/>numbers from tools only]
@@ -103,7 +103,7 @@ The same framework-agnostic handler runs on **Vercel**, in the **Cloud Run conta
 | **Technology**        | TypeScript strict (+ `noUncheckedIndexedAccess`), React 19, Motion 14, Vite 8, Zod 4, Vercel Functions, Docker, **type-aware ESLint** (`recommendedTypeChecked` + `stylisticTypeChecked`), Prettier, GitHub Actions, Dependabot                                                                                                                                                                                                                               | [`eslint.config.js`](eslint.config.js), [`.github/`](.github/)                   |
 | **Performance**       | Lighthouse desktop **100** (FCP 0.4 s, Speed Index 0.6 s, TBT 0 ms, CLS 0) · immutable asset caching · system fonts · CSS-only charts · first-paint content rendered without animation delay · tools run in < 1 ms                                                                                                                                                                                                                                            | [Measured quality](#measured-quality-live-site)                                  |
 | **Google technology** | Gemini agent, Firebase Performance and Analytics, Cloud Run container                                                                                                                                                                                                                                                                                                                                                                                         | [Google technology used](#google-technology-used)                                |
-| **Testing**           | **99 tests, 92.5% coverage, CI-enforced floors**: calculators, schema bounds, agent loop with a scripted fake Gemini (injection, self-correction, unknown tools, turn budget, model fallback, token accounting), HTTP hardening, cache, rate limiter, static server and traversal attacks, UI flows with axe. Plus a **14-check end-to-end smoke test** run against the built container in CI                                                                 | [`tests/`](tests/), [`scripts/smoke.mjs`](scripts/smoke.mjs)                     |
+| **Testing**           | **100 tests, 92.5% coverage, CI-enforced floors**: calculators, schema bounds, agent loop with a scripted fake Gemini (injection, self-correction, unknown tools, turn budget, model fallback, token accounting), HTTP hardening, cache, rate limiter, static server and traversal attacks, UI flows with axe. Plus a **14-check end-to-end smoke test** run against the built container in CI                                                                | [`tests/`](tests/), [`scripts/smoke.mjs`](scripts/smoke.mjs)                     |
 | **Accessibility**     | Lighthouse 100 · axe 0 violations in both themes (contrast included) · semantic landmarks, skip link, labelled controls, `aria-live` status, `role="alert"` errors, focus moved to results and page titles, keyboard-operable everything, visible focus, `prefers-reduced-motion`                                                                                                                                                                             | [`tests/app.test.tsx`](tests/app.test.tsx)                                       |
 | **Documentation**     | This README, [architecture guide](docs/ARCHITECTURE.md), [OpenAPI 3.1 spec](docs/openapi.yaml), [security policy](SECURITY.md), [contributing guide](CONTRIBUTING.md), [changelog](CHANGELOG.md), cited emission factors                                                                                                                                                                                                                                      | [`docs/`](docs/)                                                                 |
 
@@ -176,7 +176,7 @@ api/plan.ts            Vercel Function entry
 server/                agent loop, HTTP policy, cache, rate limit, Gemini client, Cloud Run server
 shared/                emission factors, pure tools, Zod schemas, demo profiles (used by client and server)
 src/                   React UI, Motion variants, telemetry
-tests/                 99 unit, integration and UI accessibility tests
+tests/                 100 unit, integration and UI accessibility tests
 scripts/smoke.mjs      end-to-end checks against a running deployment
 docs/                  architecture guide, OpenAPI spec, screenshots
 Dockerfile             Cloud Run container

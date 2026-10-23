@@ -28,7 +28,7 @@ sequenceDiagram
         C-->>B: plan (cached: true, 0 tokens)
     else cache miss
         H->>H: per-IP rate limit (8/min)
-        H->>A: runAgent (45 s AbortSignal)
+        H->>A: runAgent (45 s budget, 15 s per call)
         loop up to 6 turns
             A->>G: generateContent (tools, function calling ANY, safety settings)
             G-->>A: functionCall(s) + usage
@@ -66,13 +66,14 @@ sequenceDiagram
 
 ## Failure handling
 
-| Failure                                         | Behaviour                                                  |
-| ----------------------------------------------- | ---------------------------------------------------------- |
-| Primary model errors (quota, overload, retired) | Retry the same turn once on the fallback model             |
-| Model fails after data was extracted            | Deterministic narrative (`source: fallback`)               |
-| Model fails before any data                     | 422 with a user-safe message suggesting demo mode          |
-| Request exceeds 45 s                            | AbortSignal cancels the in-flight call                     |
-| Unexpected exception                            | Generic 500; details only in server logs with a request id |
+| Failure                                         | Behaviour                                                   |
+| ----------------------------------------------- | ----------------------------------------------------------- |
+| Primary model errors (quota, overload, retired) | Retry the same turn once on the fallback model              |
+| A single model call hangs                       | Cancelled after 15 s and retried once on the fallback model |
+| Model fails after data was extracted            | Deterministic narrative (`source: fallback`)                |
+| Model fails before any data                     | 422 with a user-safe message suggesting demo mode           |
+| Request exceeds 45 s                            | AbortSignal cancels the in-flight call                      |
+| Unexpected exception                            | Generic 500; details only in server logs with a request id  |
 
 ## Known limitations
 
