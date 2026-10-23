@@ -1,8 +1,12 @@
 import { GoogleGenAI } from '@google/genai';
 import type { ModelClient } from './agent.js';
 
-/** `gemini-flash-latest` tracks Google's current Flash model; pin a version with GEMINI_MODEL if needed. */
-export const DEFAULT_MODEL = 'gemini-flash-latest';
+/**
+ * Pinned stable model, chosen by benchmarking the full 4-turn agent: about 15 s end to end with the most
+ * specific plans. The moving `gemini-flash-latest` alias hung on tool calls. Override with GEMINI_MODEL
+ * (for example `gemini-3.1-flash-lite`, which is about 6 s with plainer plans).
+ */
+export const DEFAULT_MODEL = 'gemini-3.5-flash';
 
 export interface GeminiConfig {
   client: ModelClient | null;
