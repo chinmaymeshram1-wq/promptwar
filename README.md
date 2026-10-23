@@ -53,7 +53,7 @@ flowchart LR
     U[User browser<br/>React + TypeScript] -- POST /api/plan --> F[Vercel Function<br/>api/plan.ts]
     F --> H[handler.ts<br/>method / content-type / size / Zod / rate limit]
     H -- demo mode --> D[Deterministic pipeline<br/>no model call]
-    H -- agent mode --> A[Agent loop<br/>max 6 turns, 25 s timeout]
+    H -- agent mode --> A[Agent loop<br/>max 6 turns, 45 s timeout]
     A <-- function calling --> G[(Google Gemini API<br/>gemini-flash-latest)]
     A --> T[Tools<br/>calculate_footprint<br/>compare_to_benchmarks<br/>rank_actions<br/>submit_plan]
     D --> T

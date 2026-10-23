@@ -14,6 +14,14 @@ export function createGeminiFromEnv(env: Record<string, string | undefined> = pr
   const apiKey = env.GEMINI_API_KEY?.trim();
   const model = env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
   if (!apiKey) return { client: null, model };
-  const ai = new GoogleGenAI({ apiKey, httpOptions: { timeout: 20_000 } });
+  // No httpOptions.timeout: the SDK maps it to an X-Server-Timeout header, which made Gemini abandon
+  // slower tool-calling turns with 504 DEADLINE_EXCEEDED. The per-request AbortSignal in handler.ts
+  // still bounds total latency. Transient 429/5xx responses get one quick retry.
+  const ai = new GoogleGenAI({
+    apiKey,
+    httpOptions: {
+      retryOptions: { attempts: 2, initialDelay: 400, maxDelay: 1500, httpStatusCodes: [429, 500, 503, 504] },
+    },
+  });
   return { client: ai.models, model };
 }

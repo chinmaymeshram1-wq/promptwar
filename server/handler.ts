@@ -8,7 +8,7 @@ import { AgentError, runAgent, type ModelClient } from './agent.js';
 import type { RateLimiter } from './rateLimit.js';
 
 export const MAX_BODY_BYTES = 4 * 1024;
-export const AGENT_TIMEOUT_MS = 25_000;
+export const AGENT_TIMEOUT_MS = 45_000;
 
 export interface HandlerRequest {
   method: string | undefined;
