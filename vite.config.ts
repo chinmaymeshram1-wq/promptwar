@@ -2,7 +2,7 @@
 import react from '@vitejs/plugin-react';
 import type { IncomingMessage } from 'node:http';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
-import type * as HttpModule from './server/http';
+import type * as HttpModule from './server/http.js';
 
 const readBody = (req: IncomingMessage): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -52,6 +52,8 @@ export default defineConfig({
       include: ['shared/**', 'server/**', 'src/**'],
       exclude: ['src/main.tsx', '**/*.d.ts'],
       reporter: ['text', 'html', 'json-summary'],
+      // CI fails if coverage drops below these floors.
+      thresholds: { statements: 85, branches: 75, functions: 85, lines: 85 },
     },
   },
 });
