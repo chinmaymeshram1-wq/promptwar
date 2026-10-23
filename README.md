@@ -3,8 +3,10 @@
 > **Describe your lifestyle in plain words. A Gemini agent turns it into a measurable, personalised carbon-reduction plan, and every number comes from audited, tested code, not from the LLM.**
 
 [![CI](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml/badge.svg)](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-64%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)
+![Tests](https://img.shields.io/badge/tests-66%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-91%25-brightgreen)
+![Lighthouse](https://img.shields.io/badge/Lighthouse-100%20%C2%B7%20100%20%C2%B7%20100%20%C2%B7%20100-brightgreen)
+![axe](https://img.shields.io/badge/axe-0%20violations-brightgreen)
 ![npm audit](https://img.shields.io/badge/npm%20audit-0%20vulnerabilities-brightgreen)
 ![Gemini](https://img.shields.io/badge/Google-Gemini%20API-4285F4)
 ![Firebase](https://img.shields.io/badge/Google-Firebase-FFCA28)
@@ -37,6 +39,30 @@ LLMs are good at understanding messy language and prioritising. They are bad at 
 - Gemini **never produces a number shown to the user**. Footprints, savings and projections come from pure, unit-tested functions in [`shared/tools.ts`](shared/tools.ts).
 - Tools that need numbers (`compare_to_benchmarks`, `rank_actions`) take **no arguments from the model**. They read server-side state, so a prompt-injected model cannot fabricate results.
 - Any action id the model invents is dropped. Any invalid tool argument is rejected by a Zod schema and returned to the model as an error so it can **self-correct**.
+
+## Screenshots
+
+| Plan builder                                                                                       | Agent results                                                                                    |
+| -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| ![Plan builder: describe your lifestyle or pick a demo profile](docs/screenshots/plan-builder.png) | ![Results: KPIs, charts, ranked actions and the agent trace](docs/screenshots/agent-results.png) |
+
+![Methodology: every emission factor rendered from the same module the calculators use](docs/screenshots/methodology.png)
+
+## Measured quality (live site)
+
+Measured against **https://promptwar-opal.vercel.app** on 23 Oct 2026.
+
+| Check                                                | Result                                                                                                                                                   |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lighthouse 13.5, desktop                             | **Performance 100 · Accessibility 100 · Best Practices 100 · SEO 100 · Agentic Browsing 100** (FCP 0.4 s, LCP 0.4 s, Speed Index 0.6 s, TBT 0 ms, CLS 0) |
+| Lighthouse 13.5, mobile (slow 4G emulation)          | Performance 99 · Accessibility 100 · Best Practices 100 · SEO 100 · Agentic Browsing 100 (TBT 0 ms, CLS 0)                                               |
+| axe-core in a real browser, colour contrast included | **0 violations** on landing, results and methodology, in dark and light themes                                                                           |
+| Browser console under the production CSP             | **0 errors, 0 CSP violations**                                                                                                                           |
+| Security headers                                     | CSP (no `unsafe-inline`), HSTS preload, `nosniff`, `X-Frame-Options: DENY`, Referrer-Policy, Permissions-Policy, COOP                                    |
+| API hardening (live)                                 | Wrong method 405 · wrong content type 415 · malformed JSON 400 · path-traversal id 400 · oversized body 413                                              |
+| End-to-end AI run through the UI                     | Gemini agent plan in about 9 s with 4 tool calls                                                                                                         |
+| `npm audit`                                          | **0 vulnerabilities**                                                                                                                                    |
+| Tests                                                | 66 passing, 91% statement coverage, CI-enforced floors                                                                                                   |
 
 ## Interface
 
@@ -89,18 +115,18 @@ flowchart LR
 - Server-side SDK timeout (`httpOptions.timeout`) plus an `AbortSignal` budget per request.
 - **Firebase Performance Monitoring** for real-user page-load and `/api/plan` network traces ([`src/telemetry.ts`](src/telemetry.ts)).
 - **Firebase Analytics (GA4)** custom events `plan_generated` (source, latency, tool calls, actions, rating) and `plan_failed` (status). No user text is ever sent.
-- Firebase is lazy-loaded at idle time in separate chunks (about 25 KB gzip), so it never delays first paint. It is disabled automatically when `VITE_FIREBASE_CONFIG` is unset.
+- Firebase starts on the first user interaction, in separate code-split chunks, so the Google tag never competes with the initial page load. (Trade-off: visitors who leave without interacting are not counted.) It is disabled automatically when `VITE_FIREBASE_CONFIG` is unset.
 
 ## Evaluation criteria → evidence
 
 | Criterion             | What we did                                                                                                                                                                                                                                                                                                                                           | Where to look                                                                            |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | **Security**          | Server-only API key, prompt-injection boundary, numbers never from the model, Zod on every input and tool call, rate limit, body and length caps, strict CSP and security headers, no error leakage, 0 `npm audit` vulnerabilities                                                                                                                    | [`SECURITY.md`](SECURITY.md), [`vercel.json`](vercel.json), [`server/`](server/)         |
-| **Efficiency**        | Bounded agent (≤ 6 turns), parallel tool calls in one turn, demo mode with zero model calls, warm-instance client reuse, 93 KB gzip initial JS with the animation engine lazy-loaded separately, CSS-only charts, no UI framework or icon library                                                                                                     | [`server/agent.ts`](server/agent.ts), [`server/http.ts`](server/http.ts)                 |
+| **Efficiency**        | Bounded agent (≤ 6 turns), parallel tool calls in one turn, demo mode with zero model calls, warm-instance client reuse, 78 KB gzip initial JS; the results dashboard, Methodology page, animation engine and Firebase are code-split and loaded on demand, CSS-only charts, no UI framework or icon library                                          | [`server/agent.ts`](server/agent.ts), [`server/http.ts`](server/http.ts)                 |
 | **Technology**        | TypeScript strict mode (+ `noUncheckedIndexedAccess`), React 19, Motion 14 (`motion/react`, lazy `domMax` features), Vite 8, Zod 4, Vercel Functions, ESLint + Prettier, GitHub Actions CI                                                                                                                                                            | [`tsconfig.json`](tsconfig.json), [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | **Performance**       | Static assets cached immutable for 1 year, system fonts, CSS-only charts, deterministic tools run in < 1 ms, request aborts on navigation                                                                                                                                                                                                             | [`vercel.json`](vercel.json), [`src/App.tsx`](src/App.tsx)                               |
 | **Google technology** | Gemini API function-calling agent with system instructions; Firebase Performance Monitoring and Analytics                                                                                                                                                                                                                                             | [`server/agent.ts`](server/agent.ts), [`src/telemetry.ts`](src/telemetry.ts)             |
-| **Testing**           | 64 tests, 92% statement coverage: calculators, schema bounds, agent loop with a scripted fake Gemini (injection, self-correction, unknown tools, turn budget, failures), HTTP hardening, rate limiter, UI flows                                                                                                                                       | [`tests/`](tests/)                                                                       |
+| **Testing**           | 66 tests, 91% statement coverage (CI-enforced floors: 85% statements, lines and functions; 75% branches): calculators, schema bounds, agent loop with a scripted fake Gemini (injection, self-correction, unknown tools, turn budget, failures), HTTP hardening, rate limiter, UI flows                                                               | [`tests/`](tests/)                                                                       |
 | **Accessibility**     | Semantic landmarks, skip link, labelled controls, `aria-live` status, `role="alert"` errors, focus moved to results, keyboard-operable mode switch and sidebar, focus moved to the page title on navigation, visible focus rings, `prefers-reduced-motion` honoured by every animation, dark (default) and light themes, **axe-core checks in tests** | [`tests/app.test.tsx`](tests/app.test.tsx), [`src/styles.css`](src/styles.css)           |
 
 ## Emission factors and sources
