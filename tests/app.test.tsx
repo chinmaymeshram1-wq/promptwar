@@ -54,7 +54,8 @@ describe('App', () => {
 
     const heading = await screen.findByRole('heading', { level: 2, name: demoPlan.headline });
     await waitFor(() => expect(heading).toHaveFocus());
-    expect(screen.getByText('Demo mode · deterministic')).toBeInTheDocument();
+    expect(screen.getByText('Demo data · deterministic')).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getAllByRole('listitem').length).toBeGreaterThan(5);
 
     const [, init] = fetchMock.mock.calls[0]!;
@@ -82,5 +83,26 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /use an example/i }));
     await user.click(screen.getByRole('button', { name: /build my plan/i }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/network error/i);
+  });
+
+  it('navigates to the methodology page and shows the real emission factors', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.click(screen.getByRole('button', { name: /methodology/i }));
+    const heading = await screen.findByRole('heading', { level: 1, name: 'Methodology' });
+    await waitFor(() => expect(heading).toHaveFocus());
+    expect(screen.getByRole('button', { name: /methodology/i })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByText('0.716 kg / kWh')).toBeInTheDocument();
+    await expectNoAxeViolations(container);
+  });
+
+  it('switches between dark and light themes', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    await user.click(screen.getByRole('button', { name: /switch to light theme/i }));
+    expect(document.documentElement.dataset.theme).toBe('light');
+    await user.click(screen.getByRole('button', { name: /switch to dark theme/i }));
+    expect(document.documentElement.dataset.theme).toBe('dark');
   });
 });

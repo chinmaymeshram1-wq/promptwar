@@ -242,7 +242,12 @@ export async function runAgent(description: string, options: AgentOptions): Prom
     const parts: Part[] = calls.map((call) => {
       const t0 = now();
       const { result, summary } = executeTool(call, state);
-      steps.push({ tool: call.name ?? 'unknown', summary, durationMs: Math.round(now() - t0) });
+      steps.push({
+        tool: call.name ?? 'unknown',
+        summary,
+        ok: !('error' in result),
+        durationMs: Math.round(now() - t0),
+      });
       return { functionResponse: { id: call.id, name: call.name, response: result } };
     });
     contents.push({ role: 'user', parts });

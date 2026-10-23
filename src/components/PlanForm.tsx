@@ -1,7 +1,9 @@
+import { m } from 'motion/react';
 import { useId, useState, type FormEvent } from 'react';
 import { LIMITS } from '../../shared/constants';
 import { DEMO_PROFILES } from '../../shared/demoProfiles';
 import type { PlanRequest } from '../../shared/schemas';
+import { DURATION, EASE_OUT, tapPress } from '../motion/variants';
 
 type Mode = PlanRequest['mode'];
 
@@ -9,6 +11,11 @@ interface PlanFormProps {
   busy: boolean;
   onSubmit: (request: PlanRequest) => void;
 }
+
+const MODES: readonly { value: Mode; label: string }[] = [
+  { value: 'agent', label: 'AI agent' },
+  { value: 'demo', label: 'Demo mode' },
+];
 
 const EXAMPLE =
   'I take an auto 8 km to college every weekday and fly home to Delhi twice a year. Family of 4, our electricity bill is about Rs 2,400 a month, one LPG cylinder every 6 weeks, and we eat eggs and chicken a few times a week.';
@@ -21,64 +28,67 @@ export function PlanForm({ busy, onSubmit }: PlanFormProps) {
   const hintId = useId();
   const countId = useId();
 
-  const trimmedLength = description.trim().length;
-  const tooShort = trimmedLength < LIMITS.descriptionMinChars;
+  const tooShort = description.trim().length < LIMITS.descriptionMinChars;
+  const disabled = busy || (mode === 'agent' && tooShort);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (busy) return;
-    if (mode === 'agent') {
-      if (!tooShort) onSubmit({ mode, description: description.trim() });
-    } else {
-      onSubmit({ mode, profileId });
-    }
+    if (disabled) return;
+    onSubmit(mode === 'agent' ? { mode, description: description.trim() } : { mode, profileId });
   };
 
   return (
-    <form className="card plan-form" onSubmit={submit} aria-busy={busy}>
-      <fieldset className="mode-switch">
+    <form className="card" onSubmit={submit} aria-busy={busy}>
+      <fieldset className="segmented">
         <legend className="visually-hidden">Choose how to build your plan</legend>
-        <label className={mode === 'agent' ? 'active' : ''}>
-          <input type="radio" name="mode" value="agent" checked={mode === 'agent'} onChange={() => setMode('agent')} />
-          AI agent
-        </label>
-        <label className={mode === 'demo' ? 'active' : ''}>
-          <input type="radio" name="mode" value="demo" checked={mode === 'demo'} onChange={() => setMode('demo')} />
-          Demo mode
-        </label>
+        {MODES.map(({ value, label }) => (
+          <label key={value} className="segment">
+            {mode === value && (
+              <m.span
+                layoutId="segment-indicator"
+                className="segment-indicator"
+                transition={{ duration: DURATION.base, ease: EASE_OUT }}
+              />
+            )}
+            <input type="radio" name="mode" value={value} checked={mode === value} onChange={() => setMode(value)} />
+            <span className="segment-label">{label}</span>
+          </label>
+        ))}
       </fieldset>
 
       {mode === 'agent' ? (
         <div className="field">
-          <label htmlFor={textareaId}>Describe your week in plain words</label>
-          <p id={hintId} className="hint">
-            Travel, electricity, cooking, diet, waste: whatever you know. Gemini extracts the data; our tested
-            calculator does the maths.
+          <label className="field-label" htmlFor={textareaId}>
+            Describe your week in plain words
+          </label>
+          <p id={hintId} className="field-hint">
+            Travel, electricity, cooking, diet, waste: whatever you know. Gemini extracts the data and our tested
+            calculators do the maths.
           </p>
           <textarea
             id={textareaId}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             maxLength={LIMITS.descriptionMaxChars}
-            rows={6}
+            rows={7}
             required
             aria-describedby={`${hintId} ${countId}`}
             placeholder={EXAMPLE}
           />
           <div className="field-footer">
-            <button type="button" className="link-button" onClick={() => setDescription(EXAMPLE)}>
+            <button type="button" className="btn-link" onClick={() => setDescription(EXAMPLE)}>
               Use an example
             </button>
-            <span id={countId} className="hint" aria-live="polite">
+            <span id={countId} className="muted">
               {description.length}/{LIMITS.descriptionMaxChars}
             </span>
           </div>
         </div>
       ) : (
-        <fieldset className="field profiles">
-          <legend>Pick a sample profile (runs offline, no AI key needed)</legend>
+        <fieldset className="profiles">
+          <legend className="field-label">Pick a sample profile</legend>
           {DEMO_PROFILES.map((profile) => (
-            <label key={profile.id} className={`profile ${profileId === profile.id ? 'active' : ''}`}>
+            <label key={profile.id} className="profile">
               <input
                 type="radio"
                 name="profile"
@@ -86,18 +96,28 @@ export function PlanForm({ busy, onSubmit }: PlanFormProps) {
                 checked={profileId === profile.id}
                 onChange={() => setProfileId(profile.id)}
               />
-              <span>
-                <strong>{profile.label}</strong>
-                <span className="hint">{profile.description}</span>
-              </span>
+              <strong>{profile.label}</strong>
+              <span>{profile.description}</span>
             </label>
           ))}
         </fieldset>
       )}
 
-      <button type="submit" className="primary" disabled={busy || (mode === 'agent' && tooShort)}>
-        {busy ? 'Building your plan…' : 'Build my plan'}
-      </button>
+      <div className="form-actions">
+        <m.button
+          type="submit"
+          className="btn btn-primary btn-block"
+          disabled={disabled}
+          whileTap={disabled ? undefined : tapPress}
+        >
+          {busy ? 'Building your plan…' : 'Build my plan'}
+        </m.button>
+        <p className="form-note">
+          {mode === 'agent'
+            ? 'Your text is sent to the Gemini API for this request only. Nothing is stored.'
+            : 'Demo data, clearly labelled. Runs the real calculators with no AI call.'}
+        </p>
+      </div>
     </form>
   );
 }

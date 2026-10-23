@@ -16,7 +16,7 @@ export function runDemo(profile: DemoProfile, now: () => number = () => performa
   const timed = <T>(tool: string, fn: () => T, describe: (value: T) => string): T => {
     const t0 = now();
     const value = fn();
-    steps.push({ tool, summary: describe(value), durationMs: Math.round(now() - t0) });
+    steps.push({ tool, summary: describe(value), ok: true, durationMs: Math.round(now() - t0) });
     return value;
   };
 

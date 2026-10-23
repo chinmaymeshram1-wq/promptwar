@@ -3,8 +3,8 @@
 > **Describe your lifestyle in plain words. A Gemini agent turns it into a measurable, personalised carbon-reduction plan, and every number comes from audited, tested code, not from the LLM.**
 
 [![CI](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml/badge.svg)](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-56%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen)
+![Tests](https://img.shields.io/badge/tests-58%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)
 ![npm audit](https://img.shields.io/badge/npm%20audit-0%20vulnerabilities-brightgreen)
 ![Gemini](https://img.shields.io/badge/Google-Gemini%20API-4285F4)
 
@@ -36,6 +36,14 @@ LLMs are good at understanding messy language and prioritising. They are bad at 
 - Gemini **never produces a number shown to the user**. Footprints, savings and projections come from pure, unit-tested functions in [`shared/tools.ts`](shared/tools.ts).
 - Tools that need numbers (`compare_to_benchmarks`, `rank_actions`) take **no arguments from the model**. They read server-side state, so a prompt-injected model cannot fabricate results.
 - Any action id the model invents is dropped. Any invalid tool argument is rejected by a Zod schema and returned to the model as an error so it can **self-correct**.
+
+## Interface
+
+- **Dark-first SaaS layout** with a sidebar (Plan builder, Methodology), consistent page headers and a two-pane workspace: input on the left, live dashboard on the right.
+- **Dashboard:** summary, four animated KPI cards (current, projected, reduction, gap to the Paris target), category and benchmark bar charts, a ranked action table and an expandable agent timeline.
+- **Honest states:** an empty state, an in-flight progress timeline with real elapsed time, error alerts with a Demo-mode hint, and failed tool calls shown as failed (from the server's per-step `ok` flag).
+- **Motion:** short page and panel entrances, staggered cards, count-up KPIs, growing bars, a sliding nav and segmented-control indicator, and a quietly animated canopy background. Micro-interactions take 150–250 ms and transitions 250–400 ms. Everything is compositor-friendly and switches off under `prefers-reduced-motion`.
+- **Methodology page:** renders every emission factor directly from `shared/factors.ts`, the same module the calculators use.
 
 ## Architecture
 
@@ -80,15 +88,15 @@ flowchart LR
 
 ## Evaluation criteria → evidence
 
-| Criterion             | What we did                                                                                                                                                                                                                                            | Where to look                                                                            |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| **Security**          | Server-only API key, prompt-injection boundary, numbers never from the model, Zod on every input and tool call, rate limit, body and length caps, strict CSP and security headers, no error leakage, 0 `npm audit` vulnerabilities                     | [`SECURITY.md`](SECURITY.md), [`vercel.json`](vercel.json), [`server/`](server/)         |
-| **Efficiency**        | Bounded agent (≤ 6 turns), parallel tool calls in one turn, demo mode with zero model calls, warm-instance client reuse, small bundle (72 KB gzip JS, 2 KB CSS), no chart or UI framework                                                              | [`server/agent.ts`](server/agent.ts), [`server/http.ts`](server/http.ts)                 |
-| **Technology**        | TypeScript strict mode (+ `noUncheckedIndexedAccess`), React 19, Vite 8, Zod 4, Vercel Functions, ESLint + Prettier, GitHub Actions CI                                                                                                                 | [`tsconfig.json`](tsconfig.json), [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
-| **Performance**       | Static assets cached immutable for 1 year, system fonts, CSS-only charts, deterministic tools run in < 1 ms, request aborts on navigation                                                                                                              | [`vercel.json`](vercel.json), [`src/App.tsx`](src/App.tsx)                               |
-| **Google technology** | Gemini API, function-calling agent, system instructions                                                                                                                                                                                                | [`server/agent.ts`](server/agent.ts)                                                     |
-| **Testing**           | 56 tests, 94% statement coverage: calculators, schema bounds, agent loop with a scripted fake Gemini (injection, self-correction, unknown tools, turn budget, failures), HTTP hardening, rate limiter, UI flows                                        | [`tests/`](tests/)                                                                       |
-| **Accessibility**     | Semantic landmarks, skip link, labelled controls, `aria-live` status, `role="alert"` errors, focus moved to results, keyboard-operable mode switch, visible focus rings, `prefers-reduced-motion`, light and dark themes, **axe-core checks in tests** | [`tests/app.test.tsx`](tests/app.test.tsx), [`src/styles.css`](src/styles.css)           |
+| Criterion             | What we did                                                                                                                                                                                                                                                                                                                                           | Where to look                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **Security**          | Server-only API key, prompt-injection boundary, numbers never from the model, Zod on every input and tool call, rate limit, body and length caps, strict CSP and security headers, no error leakage, 0 `npm audit` vulnerabilities                                                                                                                    | [`SECURITY.md`](SECURITY.md), [`vercel.json`](vercel.json), [`server/`](server/)         |
+| **Efficiency**        | Bounded agent (≤ 6 turns), parallel tool calls in one turn, demo mode with zero model calls, warm-instance client reuse, 93 KB gzip initial JS with the animation engine lazy-loaded separately, CSS-only charts, no UI framework or icon library                                                                                                     | [`server/agent.ts`](server/agent.ts), [`server/http.ts`](server/http.ts)                 |
+| **Technology**        | TypeScript strict mode (+ `noUncheckedIndexedAccess`), React 19, Motion 14 (`motion/react`, lazy `domMax` features), Vite 8, Zod 4, Vercel Functions, ESLint + Prettier, GitHub Actions CI                                                                                                                                                            | [`tsconfig.json`](tsconfig.json), [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
+| **Performance**       | Static assets cached immutable for 1 year, system fonts, CSS-only charts, deterministic tools run in < 1 ms, request aborts on navigation                                                                                                                                                                                                             | [`vercel.json`](vercel.json), [`src/App.tsx`](src/App.tsx)                               |
+| **Google technology** | Gemini API, function-calling agent, system instructions                                                                                                                                                                                                                                                                                               | [`server/agent.ts`](server/agent.ts)                                                     |
+| **Testing**           | 58 tests, 92% statement coverage: calculators, schema bounds, agent loop with a scripted fake Gemini (injection, self-correction, unknown tools, turn budget, failures), HTTP hardening, rate limiter, UI flows                                                                                                                                       | [`tests/`](tests/)                                                                       |
+| **Accessibility**     | Semantic landmarks, skip link, labelled controls, `aria-live` status, `role="alert"` errors, focus moved to results, keyboard-operable mode switch and sidebar, focus moved to the page title on navigation, visible focus rings, `prefers-reduced-motion` honoured by every animation, dark (default) and light themes, **axe-core checks in tests** | [`tests/app.test.tsx`](tests/app.test.tsx), [`src/styles.css`](src/styles.css)           |
 
 ## Emission factors and sources
 

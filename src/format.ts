@@ -22,10 +22,8 @@ export const COST_LABELS: Record<PlanAction['costHint'], string> = {
 };
 
 const kgFormatter = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
-const tonneFormatter = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 1 });
 
 export const formatKg = (kg: number): string => `${kgFormatter.format(kg)} kg`;
-export const formatTonnes = (kg: number): string => `${tonneFormatter.format(kg / 1000)} t`;
 
 export const percentReduction = (before: number, after: number): number =>
   before > 0 ? Math.round(((before - after) / before) * 100) : 0;

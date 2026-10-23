@@ -1,31 +1,64 @@
-import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, m } from 'motion/react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PlanRequest, PlanResponse } from '../shared/schemas';
 import { PlanRequestError, requestPlan } from './api';
+import { MethodologyView } from './components/MethodologyView';
+import { PageHeader } from './components/PageHeader';
 import { PlanForm } from './components/PlanForm';
 import { PlanResult } from './components/PlanResult';
+import { EmptyState, ErrorState, RunProgress } from './components/RunStatus';
+import { Sidebar, type View } from './components/Sidebar';
+import { MotionProvider } from './motion/MotionProvider';
+import { fadeUp } from './motion/variants';
+import { useTheme } from './useTheme';
+import { AmbientBackground } from './components/AmbientBackground';
 
 type Status =
   | { kind: 'idle' }
-  | { kind: 'loading' }
+  | { kind: 'loading'; mode: PlanRequest['mode'] }
   | { kind: 'error'; message: string; suggestDemo: boolean }
   | { kind: 'done'; plan: PlanResponse };
 
+const PAGES: Record<View, { title: string; description: string }> = {
+  plan: {
+    title: 'Plan builder',
+    description:
+      'Describe your lifestyle. A Gemini agent extracts the facts, calls audited calculators and ranks the changes that cut the most CO₂ for you.',
+  },
+  methodology: {
+    title: 'Methodology',
+    description:
+      'Every number EcoPilot shows comes from these published emission factors, never from the language model.',
+  },
+};
+
 export function App() {
+  const [view, setView] = useState<View>('plan');
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
+  const [theme, toggleTheme] = useTheme();
   const controllerRef = useRef<AbortController | null>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const navigatedRef = useRef(false);
 
   useEffect(() => () => controllerRef.current?.abort(), []);
 
-  useEffect(() => {
-    if (status.kind === 'done') headingRef.current?.focus();
-  }, [status]);
+  // AnimatePresence mounts new content only after the old content exits, so focus is moved
+  // from ref callbacks at mount time rather than from effects on state changes.
+  const focusResultHeading = useCallback((node: HTMLHeadingElement | null) => node?.focus(), []);
+  const focusPageHeading = useCallback((node: HTMLHeadingElement | null) => {
+    // Only after in-app navigation, never on first load.
+    if (navigatedRef.current) node?.focus();
+  }, []);
+
+  const navigate = (next: View) => {
+    navigatedRef.current = true;
+    setView(next);
+  };
 
   const handleSubmit = async (request: PlanRequest) => {
     controllerRef.current?.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
-    setStatus({ kind: 'loading' });
+    setStatus({ kind: 'loading', mode: request.mode });
     try {
       const plan = await requestPlan(request, controller.signal);
       setStatus({ kind: 'done', plan });
@@ -37,51 +70,53 @@ export function App() {
     }
   };
 
+  const page = PAGES[view];
+
   return (
-    <>
+    <MotionProvider>
+      <AmbientBackground />
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <header className="site-header">
-        <div className="container">
-          <p className="logo" aria-label="EcoPilot">
-            <span aria-hidden="true">🌱</span> EcoPilot
-          </p>
-          <p className="tagline">Your agentic AI carbon coach</p>
-        </div>
-      </header>
+      <div className="app-shell">
+        <Sidebar view={view} onNavigate={navigate} theme={theme} onToggleTheme={toggleTheme} />
 
-      <main id="main" className="container">
-        <section className="hero" aria-labelledby="hero-heading">
-          <h1 id="hero-heading">Turn everyday habits into a measurable climate plan</h1>
-          <p>
-            Describe your lifestyle. A Gemini agent extracts the facts, calls audited calculators built on published
-            emission factors, and ranks the changes that cut the most CO₂ for you.
-          </p>
-        </section>
+        <main id="main" className="main">
+          <div className="main-inner">
+            <AnimatePresence mode="wait" initial={false}>
+              <m.div key={view} variants={fadeUp} initial="hidden" animate="visible" exit="exit">
+                <PageHeader title={page.title} description={page.description} headingRef={focusPageHeading} />
 
-        <PlanForm busy={status.kind === 'loading'} onSubmit={handleSubmit} />
-
-        <div aria-live="polite" role="status" className="status">
-          {status.kind === 'loading' && <p className="loading">The agent is calculating your footprint…</p>}
-        </div>
-        {status.kind === 'error' && (
-          <div role="alert" className="card error">
-            <p>{status.message}</p>
-            {status.suggestDemo && <p className="hint">Tip: switch to Demo mode to explore without the AI service.</p>}
+                {view === 'plan' ? (
+                  <div className="workspace">
+                    <div className="workspace-input">
+                      <PlanForm busy={status.kind === 'loading'} onSubmit={handleSubmit} />
+                    </div>
+                    <div>
+                      <div role="status" aria-live="polite" className="visually-hidden">
+                        {status.kind === 'loading' && 'Building your plan…'}
+                        {status.kind === 'done' && 'Your plan is ready.'}
+                      </div>
+                      <AnimatePresence mode="wait">
+                        {status.kind === 'idle' && <EmptyState key="idle" />}
+                        {status.kind === 'loading' && <RunProgress key="loading" mode={status.mode} />}
+                        {status.kind === 'error' && (
+                          <ErrorState key="error" message={status.message} suggestDemo={status.suggestDemo} />
+                        )}
+                        {status.kind === 'done' && (
+                          <PlanResult key="done" ref={focusResultHeading} plan={status.plan} />
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                ) : (
+                  <MethodologyView />
+                )}
+              </m.div>
+            </AnimatePresence>
           </div>
-        )}
-        {status.kind === 'done' && <PlanResult ref={headingRef} plan={status.plan} />}
-      </main>
-
-      <footer className="site-footer">
-        <div className="container">
-          <p>
-            Emission factors: DEFRA 2024, CEA India, IPCC 2006, Scarborough et al. 2014. Estimates for guidance, not
-            certification.
-          </p>
-        </div>
-      </footer>
-    </>
+        </main>
+      </div>
+    </MotionProvider>
   );
 }

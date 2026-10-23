@@ -69,6 +69,8 @@ export interface ActionOption {
 export const AgentStepSchema = z.object({
   tool: z.string(),
   summary: z.string(),
+  /** False when the tool rejected the call (invalid or out-of-order arguments). */
+  ok: z.boolean(),
   durationMs: z.number(),
 });
 export type AgentStep = z.infer<typeof AgentStepSchema>;
