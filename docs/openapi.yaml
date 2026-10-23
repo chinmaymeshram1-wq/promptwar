@@ -1,0 +1,194 @@
+openapi: 3.1.0
+info:
+  title: EcoPilot API
+  version: 1.1.0
+  summary: Agentic carbon-reduction planning powered by Google Gemini.
+  description: |
+    One endpoint builds a personalised plan. In `agent` mode a Gemini function-calling agent
+    extracts lifestyle data and plans; deterministic, tested tools compute every number.
+    In `demo` mode a curated profile runs through the same tools with no model call.
+  license:
+    name: MIT
+servers:
+  - url: https://promptwar-opal.vercel.app
+    description: Production (Vercel)
+  - url: http://localhost:8080
+    description: Container / Cloud Run (`npm start` or `docker run`)
+paths:
+  /api/plan:
+    post:
+      operationId: createPlan
+      summary: Build a carbon-reduction plan
+      description: |
+        Browser requests must be same-origin (an `Origin` header naming another host gets 403).
+        Agent mode is rate-limited per client IP; identical descriptions are served from a cache.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AgentRequest'
+                - $ref: '#/components/schemas/DemoRequest'
+              discriminator:
+                propertyName: mode
+            examples:
+              agent:
+                value:
+                  mode: agent
+                  description: I ride my motorbike 12 km to college every weekday and eat chicken twice a week.
+              demo:
+                value: { mode: demo, profileId: city_commuter }
+      responses:
+        '200':
+          description: Plan built.
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
+            X-RateLimit-Remaining:
+              description: Agent requests left in the current window.
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanResponse' }
+        '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '405': { $ref: '#/components/responses/Error' }
+        '413': { $ref: '#/components/responses/Error' }
+        '415': { $ref: '#/components/responses/Error' }
+        '422':
+          description: The agent could not extract any lifestyle data, or the AI service failed before it could.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429':
+          description: Rate limited.
+          headers:
+            Retry-After:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/Error' }
+        '503':
+          description: AI mode is not configured on this deployment (demo mode still works).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /healthz:
+    get:
+      operationId: health
+      summary: Liveness probe (container / Cloud Run server only)
+      responses:
+        '200':
+          description: The server is up.
+          content:
+            text/plain:
+              schema: { type: string, const: ok }
+components:
+  headers:
+    RequestId:
+      description: Correlates this response with server logs.
+      schema: { type: string }
+  responses:
+    Error:
+      description: Request rejected. The message is safe to show to users and never contains internals.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    AgentRequest:
+      type: object
+      required: [mode, description]
+      additionalProperties: false
+      properties:
+        mode: { const: agent }
+        description: { type: string, minLength: 10, maxLength: 1200 }
+    DemoRequest:
+      type: object
+      required: [mode, profileId]
+      additionalProperties: false
+      properties:
+        mode: { const: demo }
+        profileId:
+          type: string
+          pattern: '^[a-z0-9_]{1,40}$'
+          examples: [city_commuter, student_hostel, frequent_flyer]
+    Category:
+      type: string
+      enum: [transport, electricity, cooking, food, waste]
+    PlanResponse:
+      type: object
+      required:
+        [source, lifestyle, footprint, benchmark, headline, insight, actions, projectedTotalKgPerYear, steps, latencyMs]
+      properties:
+        source:
+          type: string
+          enum: [gemini, fallback, demo]
+          description: gemini = model-planned; fallback = deterministic narrative after a model failure; demo = no model.
+        model: { type: string, description: The Gemini model that answered. }
+        cached: { type: boolean, description: Served from the response cache with no model call. }
+        lifestyle:
+          type: object
+          description: Structured data extracted from the description (validated).
+        footprint:
+          type: object
+          properties:
+            byCategory:
+              type: object
+              additionalProperties: { type: number }
+              description: kg CO2e per person per year.
+            totalKgPerYear: { type: number }
+            missing:
+              type: array
+              items: { $ref: '#/components/schemas/Category' }
+              description: Categories not mentioned; excluded, never guessed.
+        benchmark:
+          type: object
+          properties:
+            totalTonnes: { type: number }
+            indiaAverageTonnes: { type: number }
+            globalAverageTonnes: { type: number }
+            parisTargetTonnes: { type: number }
+            gapToParisTonnes: { type: number }
+            rating: { type: string, enum: [excellent, good, high, very_high] }
+        headline: { type: string, maxLength: 160 }
+        insight: { type: string, maxLength: 600 }
+        actions:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+              category: { $ref: '#/components/schemas/Category' }
+              savingKgPerYear: { type: number }
+              effort: { type: string, enum: [low, medium, high] }
+              costHint: { type: string, enum: [saves_money, free, investment] }
+              note: { type: string, maxLength: 240 }
+        projectedTotalKgPerYear: { type: number }
+        steps:
+          type: array
+          description: The agent trace, one entry per tool call.
+          items:
+            type: object
+            properties:
+              tool: { type: string }
+              summary: { type: string }
+              ok: { type: boolean }
+              durationMs: { type: number }
+        latencyMs: { type: number }
+        usage:
+          type: object
+          description: Gemini token accounting (agent mode).
+          properties:
+            modelCalls: { type: integer }
+            promptTokens: { type: integer }
+            outputTokens: { type: integer }
+            totalTokens: { type: integer }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        retryAfterSeconds: { type: integer }

@@ -1,44 +1,31 @@
 # 🌱 EcoPilot: Agentic AI Carbon Coach
 
-> **Describe your lifestyle in plain words. A Gemini agent turns it into a measurable, personalised carbon-reduction plan, and every number comes from audited, tested code, not from the LLM.**
+> **Describe your week in plain words. A Google Gemini agent turns it into a measurable, personalised carbon-reduction plan, and every number comes from audited, tested code, never from the language model.**
 
 [![CI](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml/badge.svg)](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-66%20passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-91%25-brightgreen)
+![Tests](https://img.shields.io/badge/tests-99%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-92.5%25-brightgreen)
 ![Lighthouse](https://img.shields.io/badge/Lighthouse-100%20%C2%B7%20100%20%C2%B7%20100%20%C2%B7%20100-brightgreen)
 ![axe](https://img.shields.io/badge/axe-0%20violations-brightgreen)
 ![npm audit](https://img.shields.io/badge/npm%20audit-0%20vulnerabilities-brightgreen)
 ![Gemini](https://img.shields.io/badge/Google-Gemini%20API-4285F4)
 ![Firebase](https://img.shields.io/badge/Google-Firebase-FFCA28)
+![Cloud Run](https://img.shields.io/badge/Google-Cloud%20Run%20ready-4285F4)
 
-**Live demo:** **https://promptwar-opal.vercel.app** (try Demo mode for an instant result, or AI agent mode for a Gemini-planned one) · **Domain:** Sustainability · Built for PromptWars Hackathon 2026 (VYOM Club, NMIET)
+**Live demo:** **https://promptwar-opal.vercel.app** (try **Demo mode** for an instant result, or **AI agent** mode for a Gemini-planned one)
+· **Domain:** Sustainability · **Challenge:** Build Beyond AI, PromptWars Hackathon 2026 (VYOM Club, NMIET)
 
 ---
 
-## The problem
+## At a glance
 
-Most people want to cut their carbon footprint but do not know **where their emissions actually come from** or **which change matters most for them**. Generic tips ("turn off the lights") ignore the real numbers: for a frequent flyer, flights can be 60%+ of the total; for a car commuter, it is the daily drive. Carbon calculators exist, but they need long forms and give a number, not a plan.
-
-## The solution
-
-EcoPilot is an **agentic AI application**. You write one paragraph, for example _"I drive 25 km to work, our family of 3 uses 250 units of electricity a month, we eat chicken most days"_, and the agent:
-
-1. **Extracts** structured lifestyle data from free text (Gemini reasoning over natural language).
-2. **Calculates** the annual footprint per category with published emission factors (deterministic tool).
-3. **Benchmarks** it against the India average, the global average and the 2030 Paris-aligned target (deterministic tool).
-4. **Ranks** every applicable action by quantified annual CO₂ saving (deterministic tool).
-5. **Plans**: Gemini picks the most practical 3–5 actions for _this_ person and explains them.
-6. **Projects** your footprint after the plan, with overlap-safe maths.
-
-The UI shows the full **agent trace** (each tool call and what it returned) so the reasoning is transparent.
-
-### Design principle: _the AI decides, the code computes_
-
-LLMs are good at understanding messy language and prioritising. They are bad at arithmetic and can be manipulated. So in EcoPilot:
-
-- Gemini **never produces a number shown to the user**. Footprints, savings and projections come from pure, unit-tested functions in [`shared/tools.ts`](shared/tools.ts).
-- Tools that need numbers (`compare_to_benchmarks`, `rank_actions`) take **no arguments from the model**. They read server-side state, so a prompt-injected model cannot fabricate results.
-- Any action id the model invents is dropped. Any invalid tool argument is rejected by a Zod schema and returned to the model as an error so it can **self-correct**.
+|                        |                                                                                                                                                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Problem**            | People want to cut emissions but do not know where theirs come from or which change matters most for _them_. Calculators give a number, not a plan.                                            |
+| **Solution**           | An agentic app: Gemini extracts structured data from free text and orchestrates four deterministic tools that calculate, benchmark, rank and project, then explains a personalised plan.       |
+| **Why it is reliable** | The model never produces a number. Tools ignore model-supplied numbers, all inputs are schema-validated, a fallback model and a deterministic narrative mean users always get a correct plan.  |
+| **Google technology**  | Gemini API (function-calling agent, system instructions, safety settings), Firebase Performance Monitoring and Analytics, Cloud Run-ready container verified in CI.                            |
+| **Evidence**           | Lighthouse desktop 100 in every category · axe 0 violations · 99 tests, 92.5% coverage · 0 npm audit vulnerabilities · 14-check end-to-end smoke test against the container and the live site. |
 
 ## Screenshots
 
@@ -48,86 +35,91 @@ LLMs are good at understanding messy language and prioritising. They are bad at 
 
 ![Methodology: every emission factor rendered from the same module the calculators use](docs/screenshots/methodology.png)
 
-## Measured quality (live site)
+## How it works
 
-Measured against **https://promptwar-opal.vercel.app** on 23 Oct 2026.
+You write one paragraph, for example _"I ride my motorbike 12 km to college every weekday, our electricity bill is ₹2,000 a month, we eat chicken twice a week."_ Then the agent:
 
-| Check                                                | Result                                                                                                                                                   |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Lighthouse 13.5, desktop                             | **Performance 100 · Accessibility 100 · Best Practices 100 · SEO 100 · Agentic Browsing 100** (FCP 0.4 s, LCP 0.4 s, Speed Index 0.6 s, TBT 0 ms, CLS 0) |
-| Lighthouse 13.5, mobile (slow 4G emulation)          | Performance 99 · Accessibility 100 · Best Practices 100 · SEO 100 · Agentic Browsing 100 (TBT 0 ms, CLS 0)                                               |
-| axe-core in a real browser, colour contrast included | **0 violations** on landing, results and methodology, in dark and light themes                                                                           |
-| Browser console under the production CSP             | **0 errors, 0 CSP violations**                                                                                                                           |
-| Security headers                                     | CSP (no `unsafe-inline`), HSTS preload, `nosniff`, `X-Frame-Options: DENY`, Referrer-Policy, Permissions-Policy, COOP                                    |
-| API hardening (live)                                 | Wrong method 405 · wrong content type 415 · malformed JSON 400 · path-traversal id 400 · oversized body 413                                              |
-| End-to-end AI run through the UI                     | Gemini agent plan in about 9 s with 4 tool calls                                                                                                         |
-| `npm audit`                                          | **0 vulnerabilities**                                                                                                                                    |
-| Tests                                                | 66 passing, 91% statement coverage, CI-enforced floors                                                                                                   |
+1. **Extracts** structured lifestyle data from the text (`calculate_footprint`, validated with Zod; invalid arguments are returned to the model so it **self-corrects**).
+2. **Calculates** the annual footprint per category from published emission factors. Missing categories are reported, **never guessed**.
+3. **Benchmarks** it against the India average, the global average and the 2030 Paris-aligned target (`compare_to_benchmarks`).
+4. **Ranks** every applicable action by quantified annual CO₂ saving (`rank_actions`).
+5. **Plans:** Gemini picks the most practical actions for _this_ person and explains them (`submit_plan`). Unknown action ids are dropped.
+6. **Projects** the footprint after the plan with overlap-safe maths.
 
-## Interface
+The UI shows the full **agent trace**: each tool call, whether it succeeded, timing, model calls and **tokens used**.
 
-- **Dark-first SaaS layout** with a sidebar (Plan builder, Methodology), consistent page headers and a two-pane workspace: input on the left, live dashboard on the right.
-- **Dashboard:** summary, four animated KPI cards (current, projected, reduction, gap to the Paris target), category and benchmark bar charts, a ranked action table and an expandable agent timeline.
-- **Honest states:** an empty state, an in-flight progress timeline with real elapsed time, error alerts with a Demo-mode hint, and failed tool calls shown as failed (from the server's per-step `ok` flag).
-- **Motion:** short page and panel entrances, staggered cards, count-up KPIs, growing bars, a sliding nav and segmented-control indicator, and a quietly animated canopy background. Micro-interactions take 150–250 ms and transitions 250–400 ms. Everything is compositor-friendly and switches off under `prefers-reduced-motion`.
-- **Methodology page:** renders every emission factor directly from `shared/factors.ts`, the same module the calculators use.
+### Design principle: _the AI decides, the code computes_
+
+LLMs are excellent at understanding messy language and prioritising, and unreliable at arithmetic. So:
+
+- Every figure shown comes from pure, unit-tested functions in [`shared/tools.ts`](shared/tools.ts).
+- `compare_to_benchmarks` and `rank_actions` take **no arguments from the model**. They read server-side state, so a prompt-injected model cannot fabricate results.
+- User text is wrapped in delimiters and labelled untrusted in the system instruction.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    U[User browser<br/>React + TypeScript] -- POST /api/plan --> F[Vercel Function<br/>api/plan.ts]
-    F --> H[handler.ts<br/>method / content-type / size / Zod / rate limit]
-    H -- demo mode --> D[Deterministic pipeline<br/>no model call]
-    H -- agent mode --> A[Agent loop<br/>max 6 turns, 45 s timeout]
+    U[Browser<br/>React 19 + TypeScript] -- POST /api/plan --> E{Host}
+    E -->|Vercel Function| H
+    E -->|Cloud Run container| H
+    H[handler.ts<br/>same-origin · content type · 4 KB cap · Zod<br/>cache · per-IP rate limit] -- demo --> T
+    H -- agent --> A[Agent loop<br/>≤ 6 turns · 45 s abort · model fallback]
     A <-- function calling --> G[(Google Gemini API<br/>gemini-3.1-flash-lite<br/>fallback gemini-3-flash-preview)]
-    A --> T[Tools<br/>calculate_footprint<br/>compare_to_benchmarks<br/>rank_actions<br/>submit_plan]
-    D --> T
+    A --> T[Pure tools<br/>calculate · benchmark · rank · submit]
     T --> P[assemblePlan<br/>numbers from tools only]
     P --> U
+    U -. first interaction .-> F[(Firebase<br/>Performance + Analytics)]
 ```
 
-| Layer          | Files                                                                                  | Responsibility                                                        |
-| -------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| UI             | [`src/`](src/)                                                                         | Accessible form, results, charts (CSS, no chart library), agent trace |
-| API            | [`api/plan.ts`](api/plan.ts), [`server/http.ts`](server/http.ts)                       | Web-standard Vercel Function adapter                                  |
-| Request policy | [`server/handler.ts`](server/handler.ts), [`server/rateLimit.ts`](server/rateLimit.ts) | Validation, limits, error mapping                                     |
-| Agent          | [`server/agent.ts`](server/agent.ts), [`server/gemini.ts`](server/gemini.ts)           | Gemini function-calling loop, tool dispatch, fallback                 |
-| Domain         | [`shared/tools.ts`](shared/tools.ts), [`shared/factors.ts`](shared/factors.ts)         | Pure calculators and cited emission factors                           |
-| Contracts      | [`shared/schemas.ts`](shared/schemas.ts)                                               | Zod schemas shared by client, server and model tools                  |
+The same framework-agnostic handler runs on **Vercel**, in the **Cloud Run container**, and in the **Vite dev server**, and it is unit-tested directly. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the request sequence and failure handling, and [docs/openapi.yaml](docs/openapi.yaml) for the API contract.
 
-### Reliability: three ways to a result
+### Reliability: every request gets a correct answer
 
-| Source     | When                                                                 | What happens                                                                                         |
-| ---------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `gemini`   | Normal path                                                          | Full agent loop; Gemini writes the headline, insight and per-action notes                            |
-| `fallback` | Gemini extracted data but then failed, timed out or ran out of turns | The deterministic narrative is used; the user still gets a complete, correct plan                    |
-| `demo`     | User picks **Demo mode**, or no API key is configured                | Curated profiles run through the same tools with zero model calls; judges can evaluate without a key |
+| Source                      | When                                              | What happens                                                                               |
+| --------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `gemini`                    | Normal path                                       | Full agent loop; Gemini writes the headline, insight and per-action notes                  |
+| `gemini` via fallback model | Primary model fails (quota, overload, retired)    | The same turn is retried once on the fallback model; the plan records which model answered |
+| `fallback`                  | Data was extracted, then the model failed         | Deterministic narrative; numbers are identical                                             |
+| `demo`                      | User picks Demo mode, or no API key is configured | Curated profiles through the same tools with zero model calls                              |
+| `cached`                    | Same description asked again                      | Served from a TTL/LRU cache in milliseconds with 0 tokens                                  |
 
 ## Google technology used
 
-- **Gemini API** via the official [`@google/genai`](https://www.npmjs.com/package/@google/genai) SDK (v2).
-- **Function calling** in `ANY` mode with four declared tools and JSON-Schema parameters (`parametersJsonSchema`).
-- **System instructions** that set a tool order, data hygiene ("never guess missing categories") and an injection boundary.
-- **Multi-turn agent loop** that returns tool results as `functionResponse` parts and preserves model content (including thought signatures) between turns.
-- **Benchmarked model choice:** `gemini-3.1-flash-lite` by default (a full 4-turn plan in about 6 s, with generous free-tier quota) and **automatic fallback** to `gemini-3-flash-preview` if a call fails (quota, overload or a retired model). The plan records which model answered. We measured that the moving `gemini-flash-latest` alias hung on tool calls, that 2.5 models return 404 for new keys, and that `gemini-3.5-flash` writes richer plans but exhausts its free-tier quota quickly. Both models can be set with `GEMINI_MODEL` and `GEMINI_FALLBACK_MODEL`.
-- **Resilience:** a 45 s abort budget enforced on every call, and server-side logging of upstream failures (status and message only).
-- Server-side SDK timeout (`httpOptions.timeout`) plus an `AbortSignal` budget per request.
-- **Firebase Performance Monitoring** for real-user page-load and `/api/plan` network traces ([`src/telemetry.ts`](src/telemetry.ts)).
-- **Firebase Analytics (GA4)** custom events `plan_generated` (source, latency, tool calls, actions, rating) and `plan_failed` (status). No user text is ever sent.
-- Firebase starts on the first user interaction, in separate code-split chunks, so the Google tag never competes with the initial page load. (Trade-off: visitors who leave without interacting are not counted.) It is disabled automatically when `VITE_FIREBASE_CONFIG` is unset.
+| Technology                          | How EcoPilot uses it                                                                                                                                                                                                                                                                                                | Where                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **Gemini API** (`@google/genai` v2) | Multi-turn function-calling agent (`ANY` mode, four tools with JSON-Schema parameters), system instructions, **safety settings**, per-call **token accounting**, thought-signature-preserving history                                                                                                               | [`server/agent.ts`](server/agent.ts)           |
+| **Benchmarked model selection**     | `gemini-3.1-flash-lite` by default (a full plan in about 6–20 s, generous quota) with automatic fallback to `gemini-3-flash-preview`. We measured that `gemini-flash-latest` hung on tool calls, 2.5 models return 404 for new keys, and `gemini-3.5-flash` exhausts its free quota quickly. Both are configurable. | [`server/gemini.ts`](server/gemini.ts)         |
+| **Firebase Performance Monitoring** | Real-user page-load and `/api/plan` network traces                                                                                                                                                                                                                                                                  | [`src/telemetry.ts`](src/telemetry.ts)         |
+| **Firebase Analytics (GA4)**        | `plan_generated` / `plan_failed` events with aggregate fields only, never user text                                                                                                                                                                                                                                 | [`src/telemetry.ts`](src/telemetry.ts)         |
+| **Google Cloud Run**                | Production container: multi-stage [`Dockerfile`](Dockerfile), non-root, `$PORT`, `/healthz`, graceful SIGTERM. **CI builds the image and smoke-tests it on every push.**                                                                                                                                            | [`server/standalone.ts`](server/standalone.ts) |
 
 ## Evaluation criteria → evidence
 
-| Criterion             | What we did                                                                                                                                                                                                                                                                                                                                           | Where to look                                                                            |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **Security**          | Server-only API key, prompt-injection boundary, numbers never from the model, Zod on every input and tool call, rate limit, body and length caps, strict CSP and security headers, no error leakage, 0 `npm audit` vulnerabilities                                                                                                                    | [`SECURITY.md`](SECURITY.md), [`vercel.json`](vercel.json), [`server/`](server/)         |
-| **Efficiency**        | Bounded agent (≤ 6 turns), parallel tool calls in one turn, demo mode with zero model calls, warm-instance client reuse, 78 KB gzip initial JS; the results dashboard, Methodology page, animation engine and Firebase are code-split and loaded on demand, CSS-only charts, no UI framework or icon library                                          | [`server/agent.ts`](server/agent.ts), [`server/http.ts`](server/http.ts)                 |
-| **Technology**        | TypeScript strict mode (+ `noUncheckedIndexedAccess`), React 19, Motion 14 (`motion/react`, lazy `domMax` features), Vite 8, Zod 4, Vercel Functions, ESLint + Prettier, GitHub Actions CI                                                                                                                                                            | [`tsconfig.json`](tsconfig.json), [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
-| **Performance**       | Static assets cached immutable for 1 year, system fonts, CSS-only charts, deterministic tools run in < 1 ms, request aborts on navigation                                                                                                                                                                                                             | [`vercel.json`](vercel.json), [`src/App.tsx`](src/App.tsx)                               |
-| **Google technology** | Gemini API function-calling agent with system instructions; Firebase Performance Monitoring and Analytics                                                                                                                                                                                                                                             | [`server/agent.ts`](server/agent.ts), [`src/telemetry.ts`](src/telemetry.ts)             |
-| **Testing**           | 66 tests, 91% statement coverage (CI-enforced floors: 85% statements, lines and functions; 75% branches): calculators, schema bounds, agent loop with a scripted fake Gemini (injection, self-correction, unknown tools, turn budget, failures), HTTP hardening, rate limiter, UI flows                                                               | [`tests/`](tests/)                                                                       |
-| **Accessibility**     | Semantic landmarks, skip link, labelled controls, `aria-live` status, `role="alert"` errors, focus moved to results, keyboard-operable mode switch and sidebar, focus moved to the page title on navigation, visible focus rings, `prefers-reduced-motion` honoured by every animation, dark (default) and light themes, **axe-core checks in tests** | [`tests/app.test.tsx`](tests/app.test.tsx), [`src/styles.css`](src/styles.css)           |
+| Criterion             | What we did                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Where to look                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Security**          | Server-only API key · same-origin enforcement (403) · prompt-injection boundary · numbers never from the model · Zod on every input and tool call · Gemini safety settings · per-IP rate limit, 4 KB body cap, 1,200-char input cap · CSP **without `unsafe-inline`**, HSTS, `nosniff`, `X-Frame-Options`, Permissions-Policy, COOP · generic errors with request ids · path-traversal-safe static server · non-root container · 0 audit findings, Dependabot | [`SECURITY.md`](SECURITY.md), [`server/`](server/), [`vercel.json`](vercel.json) |
+| **Efficiency**        | Response cache (0 tokens on repeats) · **token usage measured per plan** (about 3–4.5k tokens) · bounded agent (≤ 6 turns) · parallel tool calls in one turn · demo mode with zero model calls · warm-instance client reuse · 78 KB gzip initial JS with code-split views, lazy animation engine and lazy Firebase                                                                                                                                            | [`server/cache.ts`](server/cache.ts), [`server/agent.ts`](server/agent.ts)       |
+| **Technology**        | TypeScript strict (+ `noUncheckedIndexedAccess`), React 19, Motion 14, Vite 8, Zod 4, Vercel Functions, Docker, **type-aware ESLint** (`recommendedTypeChecked` + `stylisticTypeChecked`), Prettier, GitHub Actions, Dependabot                                                                                                                                                                                                                               | [`eslint.config.js`](eslint.config.js), [`.github/`](.github/)                   |
+| **Performance**       | Lighthouse desktop **100** (FCP 0.4 s, Speed Index 0.6 s, TBT 0 ms, CLS 0) · immutable asset caching · system fonts · CSS-only charts · first-paint content rendered without animation delay · tools run in < 1 ms                                                                                                                                                                                                                                            | [Measured quality](#measured-quality-live-site)                                  |
+| **Google technology** | Gemini agent, Firebase Performance and Analytics, Cloud Run container                                                                                                                                                                                                                                                                                                                                                                                         | [Google technology used](#google-technology-used)                                |
+| **Testing**           | **99 tests, 92.5% coverage, CI-enforced floors**: calculators, schema bounds, agent loop with a scripted fake Gemini (injection, self-correction, unknown tools, turn budget, model fallback, token accounting), HTTP hardening, cache, rate limiter, static server and traversal attacks, UI flows with axe. Plus a **14-check end-to-end smoke test** run against the built container in CI                                                                 | [`tests/`](tests/), [`scripts/smoke.mjs`](scripts/smoke.mjs)                     |
+| **Accessibility**     | Lighthouse 100 · axe 0 violations in both themes (contrast included) · semantic landmarks, skip link, labelled controls, `aria-live` status, `role="alert"` errors, focus moved to results and page titles, keyboard-operable everything, visible focus, `prefers-reduced-motion`                                                                                                                                                                             | [`tests/app.test.tsx`](tests/app.test.tsx)                                       |
+| **Documentation**     | This README, [architecture guide](docs/ARCHITECTURE.md), [OpenAPI 3.1 spec](docs/openapi.yaml), [security policy](SECURITY.md), [contributing guide](CONTRIBUTING.md), [changelog](CHANGELOG.md), cited emission factors                                                                                                                                                                                                                                      | [`docs/`](docs/)                                                                 |
+
+## Measured quality (live site)
+
+Measured against **https://promptwar-opal.vercel.app** on 23 Oct 2026.
+
+| Check                                                                        | Result                                                                                                     |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Lighthouse 13.5, desktop                                                     | **Performance 100 · Accessibility 100 · Best Practices 100 · SEO 100 · Agentic Browsing 100**              |
+| Lighthouse 13.5, mobile (slow 4G emulation)                                  | Performance 99 · Accessibility 100 · Best Practices 100 · SEO 100 · Agentic Browsing 100 (TBT 0 ms, CLS 0) |
+| axe-core in a real browser, colour contrast included                         | **0 violations** on landing, results and methodology, dark and light                                       |
+| Browser console under the production CSP                                     | **0 errors, 0 CSP violations**                                                                             |
+| End-to-end smoke test (`npm run smoke -- https://promptwar-opal.vercel.app`) | **13/13 checks pass** on the live site; 14/14 on the container in CI                                       |
+| End-to-end AI run through the UI                                             | Gemini plan with 4 tool calls; about 3–4.5k tokens; repeats served from cache                              |
+| `npm audit`                                                                  | **0 vulnerabilities**                                                                                      |
 
 ## Emission factors and sources
 
@@ -142,61 +134,63 @@ flowchart LR
 | Diets                  | 2.89 (vegan) to 7.19 (heavy meat) kg CO₂e / day                         | Scarborough et al. 2014, _Climatic Change_               |
 | Benchmarks             | India 2.0 t, global 4.7 t, 2030 Paris-aligned 2.3 t per person per year | Our World in Data; IPCC AR6                              |
 
-All factors live in one file, [`shared/factors.ts`](shared/factors.ts), so they are easy to audit and update.
+All factors live in [`shared/factors.ts`](shared/factors.ts) and are rendered on the in-app Methodology page from that same module.
 
-## Run locally
+## Getting started
 
 ```bash
 git clone https://github.com/chinmaymeshram1-wq/promptwar.git
 cd promptwar
-npm install
-cp .env.example .env.local   # add GEMINI_API_KEY (optional: demo mode works without it)
-npm run dev                  # http://localhost:5173, including /api/plan
+npm ci
+cp .env.example .env.local   # GEMINI_API_KEY is optional: demo mode works without it
+npm run dev                  # http://localhost:5173, with /api/plan mounted
 ```
 
-| Script                               | Purpose                                           |
-| ------------------------------------ | ------------------------------------------------- |
-| `npm run dev`                        | Vite dev server with the real API handler mounted |
-| `npm test`                           | Run all tests                                     |
-| `npm run coverage`                   | Tests with a coverage report                      |
-| `npm run lint` / `npm run typecheck` | Static checks                                     |
-| `npm run check`                      | Lint, type-check and test in one go               |
-| `npm run build`                      | Type-check and production build                   |
+| Script                                   | Purpose                                             |
+| ---------------------------------------- | --------------------------------------------------- |
+| `npm run dev`                            | Vite dev server with the real API handler           |
+| `npm run check`                          | Type-aware lint, type-check and tests               |
+| `npm run coverage`                       | Tests with coverage floors                          |
+| `npm run build` / `npm run build:server` | Client bundle / Cloud Run server bundle             |
+| `npm start`                              | Run the production server on `$PORT` (default 8080) |
+| `npm run smoke -- <url> [--container]`   | End-to-end checks against any deployment            |
 
-## Deploy to Vercel
+### Deploy to Google Cloud Run
 
-1. Import the GitHub repo in Vercel (framework preset: **Vite**, auto-detected from `vercel.json`).
-2. Add the environment variables `GEMINI_API_KEY` (server only) and `VITE_FIREBASE_CONFIG` (your Firebase web config as one line of JSON). `GEMINI_MODEL` is optional.
-3. Deploy. `api/plan.ts` becomes a serverless function and the security headers apply automatically.
-
-## API
-
-`POST /api/plan` with `Content-Type: application/json`
-
-```jsonc
-// Agent mode
-{ "mode": "agent", "description": "I ride a motorbike 10 km a day and I'm vegetarian…" }
-// Demo mode: city_commuter | student_hostel | frequent_flyer
-{ "mode": "demo", "profileId": "city_commuter" }
+```bash
+gcloud run deploy ecopilot --source . --region asia-south1 --allow-unauthenticated \
+  --set-env-vars GEMINI_API_KEY=YOUR_KEY \
+  --set-build-env-vars VITE_FIREBASE_CONFIG='{"apiKey":"…","projectId":"…","appId":"…"}'
 ```
 
-| Status                | Meaning                                                                                |
-| --------------------- | -------------------------------------------------------------------------------------- |
-| 200                   | `PlanResponse`: footprint, benchmark, ranked actions, projection, agent steps, latency |
-| 400 / 413 / 415 / 405 | Invalid input, too large, wrong content type, wrong method                             |
-| 422                   | The agent could not extract any lifestyle data                                         |
-| 429                   | Rate limited (`Retry-After` header)                                                    |
-| 503                   | AI mode not configured (demo mode still works)                                         |
+The image is built from the [`Dockerfile`](Dockerfile), listens on `$PORT`, runs as a non-root user and exposes `/healthz`.
 
-## Limitations and next steps
+### Deploy to Vercel
+
+Import the repository (preset **Vite** from `vercel.json`), add `GEMINI_API_KEY` and optionally `VITE_FIREBASE_CONFIG`, then deploy.
+
+## Project structure
+
+```text
+api/plan.ts            Vercel Function entry
+server/                agent loop, HTTP policy, cache, rate limit, Gemini client, Cloud Run server
+shared/                emission factors, pure tools, Zod schemas, demo profiles (used by client and server)
+src/                   React UI, Motion variants, telemetry
+tests/                 99 unit, integration and UI accessibility tests
+scripts/smoke.mjs      end-to-end checks against a running deployment
+docs/                  architecture guide, OpenAPI spec, screenshots
+Dockerfile             Cloud Run container
+```
+
+## Limitations and roadmap
 
 - Emission factors are averages; results are guidance, not certification.
-- Rate limiting is per instance; move it to Firestore or Redis for multi-region scale.
-- Next: Firebase Auth and Firestore to track progress over months, a bill photo upload using Gemini's multimodal input, and regional grid factors per Indian state.
+- The cache and rate limiter are per instance; for multi-region scale, move them to Firestore or Memorystore.
+- Next: Firebase Auth and Firestore to track progress over months, bill-photo upload using Gemini's multimodal input, and state-level grid factors for India.
 
 ## Disclosure
 
-Original work built during the hackathon. Open-source libraries used: React, Vite, Zod, `@google/genai`, Vitest, Testing Library, axe-core, ESLint and Prettier. Development was AI-assisted (Claude Code), as allowed by the rules on tools and frameworks.
+Original work built during the hackathon. Open-source libraries: React, Vite, Zod, `@google/genai`, Firebase JS SDK, Motion, Vitest, Testing Library, axe-core, ESLint, typescript-eslint and Prettier. Development was AI-assisted (Claude Code), as allowed by the rules on tools and frameworks.
 
 ## License
 
