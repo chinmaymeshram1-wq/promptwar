@@ -31,6 +31,8 @@ import {
 import { calculateFootprint, compareToBenchmarks, rankActions } from '../shared/tools.js';
 
 export const MAX_TURNS = 6;
+/** A single stuck model call is cancelled after this long and retried on the fallback model. */
+export const CALL_TIMEOUT_MS = 15_000;
 
 /** Block clearly harmful content in anything the model writes back to users. */
 const SAFETY_SETTINGS = [
@@ -57,6 +59,7 @@ export interface AgentOptions {
   signal?: AbortSignal;
   now?: () => number;
   maxTurns?: number;
+  callTimeoutMs?: number;
   /** Called with upstream model failures so the host can log them server-side (never sent to clients). */
   onModelError?: (error: unknown) => void;
 }
@@ -225,6 +228,7 @@ export function wrapUserText(description: string): string {
 export async function runAgent(description: string, options: AgentOptions): Promise<PlanResponse> {
   const now = options.now ?? (() => performance.now());
   const maxTurns = options.maxTurns ?? MAX_TURNS;
+  const callTimeoutMs = options.callTimeoutMs ?? CALL_TIMEOUT_MS;
   const startedAt = now();
   const state: AgentState = {};
   const steps: AgentStep[] = [];
@@ -244,7 +248,10 @@ export async function runAgent(description: string, options: AgentOptions): Prom
           tools: [{ functionDeclarations: FUNCTION_DECLARATIONS }],
           toolConfig: { functionCallingConfig: { mode: FunctionCallingConfigMode.ANY } },
           safetySettings: SAFETY_SETTINGS,
-          abortSignal: options.signal,
+          // Whichever comes first: the whole-request budget or this call's own timeout.
+          abortSignal: options.signal
+            ? AbortSignal.any([options.signal, AbortSignal.timeout(callTimeoutMs)])
+            : AbortSignal.timeout(callTimeoutMs),
         },
       });
     } catch (error) {

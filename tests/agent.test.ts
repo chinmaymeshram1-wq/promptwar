@@ -142,6 +142,27 @@ describe('runAgent', () => {
     expect(onModelError).toHaveBeenCalledTimes(1);
   });
 
+  it('cancels a stuck call and retries it on the fallback model', async () => {
+    let i = 0;
+    const client: ModelClient = {
+      generateContent: vi.fn<ModelClient['generateContent']>((params) =>
+        params.model === 'primary'
+          ? new Promise((_, reject) =>
+              params.config?.abortSignal?.addEventListener('abort', () => reject(new Error('aborted'))),
+            )
+          : Promise.resolve({ functionCalls: HAPPY_PATH[i++] ?? [] }),
+      ),
+    };
+    const plan = await runAgent('I commute by car daily to my office.', {
+      ...options(client),
+      model: 'primary',
+      fallbackModel: 'backup',
+      callTimeoutMs: 20,
+    });
+    expect(plan.source).toBe('gemini');
+    expect(plan.model).toBe('backup');
+  });
+
   it('throws a user-safe AgentError when nothing could be extracted', async () => {
     const failing: ModelClient = { generateContent: () => Promise.reject(new Error('API key invalid: sk-123')) };
     await expect(runAgent('anything at all here', options(failing))).rejects.toThrow(AgentError);
