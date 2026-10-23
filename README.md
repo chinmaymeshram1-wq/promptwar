@@ -9,7 +9,7 @@
 ![Gemini](https://img.shields.io/badge/Google-Gemini%20API-4285F4)
 ![Firebase](https://img.shields.io/badge/Google-Firebase-FFCA28)
 
-**Live demo:** _Vercel link added after deployment_ · **Domain:** Sustainability · Built for PromptWars Hackathon 2026 (VYOM Club, NMIET)
+**Live demo:** **https://promptwar-opal.vercel.app** (try Demo mode for an instant result, or AI agent mode for a Gemini-planned one) · **Domain:** Sustainability · Built for PromptWars Hackathon 2026 (VYOM Club, NMIET)
 
 ---
 
