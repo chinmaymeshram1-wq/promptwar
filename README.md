@@ -3,10 +3,11 @@
 > **Describe your lifestyle in plain words. A Gemini agent turns it into a measurable, personalised carbon-reduction plan, and every number comes from audited, tested code, not from the LLM.**
 
 [![CI](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml/badge.svg)](https://github.com/chinmaymeshram1-wq/promptwar/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-58%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-64%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)
 ![npm audit](https://img.shields.io/badge/npm%20audit-0%20vulnerabilities-brightgreen)
 ![Gemini](https://img.shields.io/badge/Google-Gemini%20API-4285F4)
+![Firebase](https://img.shields.io/badge/Google-Firebase-FFCA28)
 
 **Live demo:** _Vercel link added after deployment_ · **Domain:** Sustainability · Built for PromptWars Hackathon 2026 (VYOM Club, NMIET)
 
@@ -85,6 +86,9 @@ flowchart LR
 - **Multi-turn agent loop** that returns tool results as `functionResponse` parts and preserves model content (including thought signatures) between turns.
 - **`gemini-flash-latest`** alias by default, overridable with `GEMINI_MODEL`, for low latency and cost.
 - Server-side SDK timeout (`httpOptions.timeout`) plus an `AbortSignal` budget per request.
+- **Firebase Performance Monitoring** for real-user page-load and `/api/plan` network traces ([`src/telemetry.ts`](src/telemetry.ts)).
+- **Firebase Analytics (GA4)** custom events `plan_generated` (source, latency, tool calls, actions, rating) and `plan_failed` (status). No user text is ever sent.
+- Firebase is lazy-loaded at idle time in separate chunks (about 25 KB gzip), so it never delays first paint. It is disabled automatically when `VITE_FIREBASE_CONFIG` is unset.
 
 ## Evaluation criteria → evidence
 
@@ -94,8 +98,8 @@ flowchart LR
 | **Efficiency**        | Bounded agent (≤ 6 turns), parallel tool calls in one turn, demo mode with zero model calls, warm-instance client reuse, 93 KB gzip initial JS with the animation engine lazy-loaded separately, CSS-only charts, no UI framework or icon library                                                                                                     | [`server/agent.ts`](server/agent.ts), [`server/http.ts`](server/http.ts)                 |
 | **Technology**        | TypeScript strict mode (+ `noUncheckedIndexedAccess`), React 19, Motion 14 (`motion/react`, lazy `domMax` features), Vite 8, Zod 4, Vercel Functions, ESLint + Prettier, GitHub Actions CI                                                                                                                                                            | [`tsconfig.json`](tsconfig.json), [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | **Performance**       | Static assets cached immutable for 1 year, system fonts, CSS-only charts, deterministic tools run in < 1 ms, request aborts on navigation                                                                                                                                                                                                             | [`vercel.json`](vercel.json), [`src/App.tsx`](src/App.tsx)                               |
-| **Google technology** | Gemini API, function-calling agent, system instructions                                                                                                                                                                                                                                                                                               | [`server/agent.ts`](server/agent.ts)                                                     |
-| **Testing**           | 58 tests, 92% statement coverage: calculators, schema bounds, agent loop with a scripted fake Gemini (injection, self-correction, unknown tools, turn budget, failures), HTTP hardening, rate limiter, UI flows                                                                                                                                       | [`tests/`](tests/)                                                                       |
+| **Google technology** | Gemini API function-calling agent with system instructions; Firebase Performance Monitoring and Analytics                                                                                                                                                                                                                                             | [`server/agent.ts`](server/agent.ts), [`src/telemetry.ts`](src/telemetry.ts)             |
+| **Testing**           | 64 tests, 92% statement coverage: calculators, schema bounds, agent loop with a scripted fake Gemini (injection, self-correction, unknown tools, turn budget, failures), HTTP hardening, rate limiter, UI flows                                                                                                                                       | [`tests/`](tests/)                                                                       |
 | **Accessibility**     | Semantic landmarks, skip link, labelled controls, `aria-live` status, `role="alert"` errors, focus moved to results, keyboard-operable mode switch and sidebar, focus moved to the page title on navigation, visible focus rings, `prefers-reduced-motion` honoured by every animation, dark (default) and light themes, **axe-core checks in tests** | [`tests/app.test.tsx`](tests/app.test.tsx), [`src/styles.css`](src/styles.css)           |
 
 ## Emission factors and sources
@@ -135,7 +139,7 @@ npm run dev                  # http://localhost:5173, including /api/plan
 ## Deploy to Vercel
 
 1. Import the GitHub repo in Vercel (framework preset: **Vite**, auto-detected from `vercel.json`).
-2. Add the environment variable `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`).
+2. Add the environment variables `GEMINI_API_KEY` (server only) and `VITE_FIREBASE_CONFIG` (your Firebase web config as one line of JSON). `GEMINI_MODEL` is optional.
 3. Deploy. `api/plan.ts` becomes a serverless function and the security headers apply automatically.
 
 ## API

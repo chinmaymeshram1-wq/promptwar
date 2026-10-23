@@ -10,6 +10,7 @@ import { EmptyState, ErrorState, RunProgress } from './components/RunStatus';
 import { Sidebar, type View } from './components/Sidebar';
 import { MotionProvider } from './motion/MotionProvider';
 import { fadeUp } from './motion/variants';
+import { trackError, trackPlan } from './telemetry';
 import { useTheme } from './useTheme';
 import { AmbientBackground } from './components/AmbientBackground';
 
@@ -62,10 +63,12 @@ export function App() {
     try {
       const plan = await requestPlan(request, controller.signal);
       setStatus({ kind: 'done', plan });
+      trackPlan(plan);
     } catch (err) {
       if (controller.signal.aborted) return;
       const message = err instanceof Error ? err.message : 'Something went wrong.';
       const suggestDemo = err instanceof PlanRequestError && [0, 429, 500, 503].includes(err.status);
+      trackError(err instanceof PlanRequestError ? err.status : -1);
       setStatus({ kind: 'error', message, suggestDemo });
     }
   };

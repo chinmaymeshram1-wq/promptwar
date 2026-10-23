@@ -17,6 +17,10 @@ Do not file public issues for security problems.
 | XSS / clickjacking / sniffing         | Strict CSP (`default-src 'self'`, `frame-ancestors 'none'`), HSTS, `nosniff`, `X-Frame-Options: DENY`, restrictive Permissions-Policy; React escapes all rendered text, no `dangerouslySetInnerHTML` | `vercel.json`                              |
 | Vulnerable dependencies               | `npm audit --audit-level=high` gate in CI; minimal runtime deps (react, @google/genai, zod)                                                                                                          | `.github/workflows/ci.yml`                 |
 
+## Third-party data
+
+Firebase Analytics and Performance Monitoring receive only aggregate fields (plan source, latency, counts, rating band) and standard page-performance traces, never the text a user types. The CSP allows only the specific Google endpoints Firebase needs. Firebase web config is public by design; it is supplied by environment variable so each deployment is configurable and no key-shaped strings live in source.
+
 ## Known limitations
 
 - The rate limiter is in-memory per serverless instance. For multi-region production use a shared store
