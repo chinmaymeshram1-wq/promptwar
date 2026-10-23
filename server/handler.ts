@@ -75,6 +75,13 @@ export async function handlePlanRequest(req: HandlerRequest, deps: HandlerDeps):
       client: deps.client,
       model: deps.model,
       signal: AbortSignal.timeout(AGENT_TIMEOUT_MS),
+      onModelError: (error) =>
+        deps.log?.({
+          event: 'model_error',
+          model: deps.model,
+          // Upstream messages can be long; status and a trimmed message are enough to diagnose.
+          message: error instanceof Error ? error.message.slice(0, 300) : 'unknown',
+        }),
     });
     deps.log?.({ event: 'plan', source: plan.source, steps: plan.steps.length, latencyMs: plan.latencyMs });
     return { status: 200, body: plan, headers: { 'X-RateLimit-Remaining': String(limit.remaining) } };

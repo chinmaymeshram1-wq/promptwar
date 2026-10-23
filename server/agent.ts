@@ -43,6 +43,8 @@ export interface AgentOptions {
   signal?: AbortSignal;
   now?: () => number;
   maxTurns?: number;
+  /** Called with upstream model failures so the host can log them server-side (never sent to clients). */
+  onModelError?: (error: unknown) => void;
 }
 
 /** Raised when the agent cannot produce any grounded result. The message is safe to show users. */
@@ -228,7 +230,8 @@ export async function runAgent(description: string, options: AgentOptions): Prom
           abortSignal: options.signal,
         },
       });
-    } catch {
+    } catch (error) {
+      options.onModelError?.(error);
       modelFailed = true;
       break;
     }
